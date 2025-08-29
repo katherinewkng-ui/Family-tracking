@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dad地点停留记录</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .calendar-container {
+            flex: 2;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .nav-button {
+            background: #6a11cb;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .nav-button:hover {
+            background: #2575fc;
+        }
+        
+        .nav-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .day {
+            height: 100px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .day:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .future-day {
+            background: #f0f0f0;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+        
+        .future-day:hover {
+            background: #f0f0f0;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .today {
+            background: #e6f7ff;
+            border: 2px solid #1890ff;
+        }
+        
+        .selected {
+            background: #d6eaff;
+            border: 2px solid #1890ff;
+        }
+        
+        .day-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .day-location {
+            font-size: 0.85rem;
+            color: #6a11cb;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+        }
+        
+        .empty-day {
+            background: transparent;
+            cursor: default;
+        }
+        
+        .empty-day:hover {
+            background: transparent;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .stats-container {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .stats-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .location-stats {
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            margin-bottom: 15px;
+        }
+        
+        .location-name {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 5px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        
+        .location-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        
+        .location-input:focus {
+            border-color: #6a11cb;
+            outline: none;
+        }
+        
+        .save-btn {
+            background: #6a11cb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        .save-btn:hover {
+            background: #2575fc;
+        }
+        
+        .current-location {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eef7ff;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .highlight {
+            color: #6a11cb;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff4e6;
+            border-radius: 8px;
+            border-left: 4px solid #ffa94d;
+        }
+        
+        .batch-controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .batch-btn {
+            background: #6a11cb;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .batch-btn:hover {
+            background: #2575fc;
+        }
+        
+        .batch-info {
+            margin-left: auto;
+            font-weight: bold;
+            color: #6a11cb;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .day {
+                height: 80px;
+            }
+            
+            .batch-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .batch-info {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dad地点停留记录</h1>
+            <p class="description">记录Dad每日所在地点，自动计算各地停留时间百分比</p>
+        </header>
+        
+        <div class="instructions">
+            <p><strong>使用说明：</strong></p>
+            <p>1. 点击日期可以设置Dad当天所在的地点</p>
+            <p>2. 如果未设置地点，将自动使用前一天的设置</p>
+            <p>3. 只能填写到今天为止的日期，未来日期不可编辑</p>
+            <p>4. 修改某天地点会自动更新后续日期的地点</p>
+            <p>5. 启用批量选择后，可以多选日期进行批量操作</p>
+        </div>
+        
+        <div class="batch-controls">
+            <div class="checkbox-container">
+                <input type="checkbox" id="batch-mode">
+                <label for="batch-mode">启用批量选择</label>
+            </div>
+            <button class="batch-btn" id="batch-update" disabled>批量更新地点</button>
+            <button class="batch-btn" id="batch-clear" disabled>批量清除地点</button>
+            <button class="batch-btn" id="clear-selection" disabled>清除选择</button>
+            <div class="batch-info" id="selected-count">已选择 0 个日期</div>
+        </div>
+        
+        <div class="current-location">
+            当前默认地点: <span class="highlight" id="current-location">未设置</span>
+        </div>
+        
+        <div class="main-content">
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button class="nav-button" id="prev-month">上个月</button>
+                    <div class="calendar-title" id="current-month-year">2025年8月</div>
+                    <button class="nav-button" id="next-month">下个月</button>
+                </div>
+                
+                <div class="weekdays">
+                    <div>周日</div>
+                    <div>周一</div>
+                    <div>周二</div>
+                    <div>周三</div>
+                    <div>周四</div>
+                    <div>周五</div>
+                    <div>周六</div>
+                </div>
+                
+                <div class="days" id="calendar-days">
+                    <!-- 日历天数将通过JavaScript生成 -->
+                </div>
+            </div>
+            
+            <div class="stats-container">
+                <h2 class="stats-title">地点停留统计</h2>
+                <div class="location-stats" id="location-stats">
+                    <!-- 统计信息将通过JavaScript生成 -->
+                    <div class="no-stats">暂无数据，请先添加地点信息</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="location-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">设置地点</h2>
+                <span class="close" id="close-modal">&times;</span>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <input type="checkbox" id="update-future">
+                <label for="update-future">同时更新后续日期的地点</label>
+            </div>
+            <input type="text" class="location-input" id="location-input" placeholder="输入地点名称...">
+            <button class="save-btn" id="save-location">保存地点</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="batch-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="batch-modal-title">批量更新地点</h2>
+                <span class="close" id="close-batch-modal">&times;</span>
+            </div>
+            <input type="text" class="location-input" id="batch-location-input" placeholder="输入地点名称...">
+            <button class="save-btn" id="save-batch-location">更新所选日期</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 当前显示的日期
+            let currentDate = new Date(2025, 7, 1); // 2025年8月
+            let selectedDate = null;
+            let locationsData = {};
+            let selectedDates = new Set();
+            let isBatchMode = false;
+            
+            // 从本地存储加载数据
+            function loadData() {
+                const savedData = localStorage.getItem('dadLocations');
+                if (savedData) {
+                    locationsData = JSON.parse(savedData);
+                }
+            }
+            
+            // 保存数据到本地存储
+            function saveData() {
+                localStorage.setItem('dadLocations', JSON.stringify(locationsData));
+                updateStats();
+            }
+            
+            // 生成日历
+            function generateCalendar() {
+                const calendarDays = document.getElementById('calendar-days');
+                calendarDays.innerHTML = '';
+                
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                
+                // 更新标题
+                document.getElementById('current-month-year').textContent = `${year}年${month + 1}月`;
+                
+                // 获取当月第一天是星期几
+                const firstDay = new Date(year, month, 1).getDay();
+                
+                // 获取当月的天数
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                // 生成空白日期
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.classList.add('day', 'empty-day');
+                    calendarDays.appendChild(emptyDay);
+                }
+                
+                // 获取当前日期
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // 生成日期
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    const dateStr = formatDate(date);
+                    
+                    const dayElement = document.createElement('div');
+                    
+                    // 判断是否是未来日期
+                    if (date > today) {
+                        dayElement.classList.add('day', 'future-day');
+                    } else {
+                        dayElement.classList.add('day');
+                        
+                        // 如果是今天，添加特殊样式
+                        if (dateStr === formatDate(today)) {
+                            dayElement.classList.add('today');
+                        }
+                        
+                        // 如果这个日期被选中，添加选中样式
+                        if (selectedDates.has(dateStr)) {
+                            dayElement.classList.add('selected');
+                        }
+                    }
+                    
+                    const dayNumber = document.createElement('div');
+                    dayNumber.classList.add('day-number');
+                    dayNumber.textContent = day;
+                    
+                    const dayLocation = document.createElement('div');
+                    dayLocation.classList.add('day-location');
+                    
+                    if (locationsData[dateStr]) {
+                        dayLocation.textContent = locationsData[dateStr];
+                    } else {
+                        // 如果没有设置地点，尝试使用前一天的
+                        const prevDate = new Date(date);
+                        prevDate.setDate(prevDate.getDate() - 1);
+                        
+                        let foundLocation = false;
+                        // 向前查找最近设置的地点
+                        while (prevDate >= new Date(2025, 7, 1)) {
+                            const prevDateStr = formatDate(prevDate);
+                            if (locationsData[prevDateStr]) {
+                                dayLocation.textContent = locationsData[prevDateStr];
+                                locationsData[dateStr] = locationsData[prevDateStr];
+                                foundLocation = true;
+                                break;
+                            }
+                            prevDate.setDate(prevDate.getDate() - 1);
+                        }
+                        
+                        if (!foundLocation) {
+                            dayLocation.textContent = "未设置地点";
+                        }
+                    }
+                    
+                    dayElement.appendChild(dayNumber);
+                    dayElement.appendChild(dayLocation);
+                    
+                    // 只为非未来日期添加点击事件
+                    if (date <= today) {
+                        dayElement.addEventListener('click', () => {
+                            if (isBatchMode) {
+                                toggleDateSelection(date, dateStr, dayElement);
+                            } else {
+                                selectedDate = new Date(date);
+                                openLocationModal(selectedDate);
+                            }
+                        });
+                    }
+                    
+                    calendarDays.appendChild(dayElement);
+                }
+                
+                updateCurrentLocation();
+                updateNavigationButtons();
+                updateSelectedCount();
+            }
+            
+            // 切换日期选择状态
+            function toggleDateSelection(date, dateStr, dayElement) {
+                if (selectedDates.has(dateStr)) {
+                    selectedDates.delete(dateStr);
+                    dayElement.classList.remove('selected');
+                } else {
+                    selectedDates.add(dateStr);
+                    dayElement.classList.add('selected');
+                }
+                updateBatchButtons();
+                updateSelectedCount();
+            }
+            
+            // 更新批量操作按钮状态
+            function updateBatchButtons() {
+                const hasSelected = selectedDates.size > 0;
+                document.getElementById('batch-update').disabled = !hasSelected;
+                document.getElementById('batch-clear').disabled = !hasSelected;
+                document.getElementById('clear-selection').disabled = !hasSelected;
+            }
+            
+            // 更新选中日期计数
+            function updateSelectedCount() {
+                document.getElementById('selected-count').textContent = `已选择 ${selectedDates.size} 个日期`;
+            }
+            
+            // 更新导航按钮状态
+            function updateNavigationButtons() {
+                const today = new Date();
+                const nextMonth = new Date(currentDate);
+                nextMonth.setMonth(nextMonth.getMonth() + 1);
+                
+                // 禁用下一月按钮如果下一月是未来月份
+                document.getElementById('next-month').disabled = 
+                    nextMonth.getFullYear() > today.getFullYear() || 
+                    (nextMonth.getFullYear() === today.getFullYear() && 
+                     nextMonth.getMonth() > today.getMonth());
+            }
+            
+            // 格式化日期为YYYY-MM-DD
+            function formatDate(date) {
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // 打开地点模态框
+            function openLocationModal(date) {
+                const modal = document.getElementById('location-modal');
+                const modalTitle = document.getElementById('modal-title');
+                const locationInput = document.getElementById('location-input');
+                
+                const dateStr = formatDate(date);
+                modalTitle.textContent = `设置地点 - ${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+                
+                if (locationsData[dateStr]) {
+                    locationInput.value = locationsData[dateStr];
+                } else {
+                    locationInput.value = '';
+                }
+                
+                modal.style.display = 'flex';
+                locationInput.focus();
+            }
+            
+            // 打开批量更新模态框
+            function openBatchModal() {
+                const modal = document.getElementById('batch-modal');
+                modal.style.display = 'flex';
+                document.getElementById('batch-location-input').focus();
+            }
+            
+            // 关闭模态框
+            function closeModal() {
+                document.getElementById('location-modal').style.display = 'none';
+                document.getElementById('batch-modal').style.display = 'none';
+            }
+            
+            // 更新当前地点显示
+            function updateCurrentLocation() {
+                const currentLocationEl = document.getElementById('current-location');
+                const today = new Date();
+                const todayStr = formatDate(today);
+                
+                if (locationsData[todayStr]) {
+                    currentLocationEl.textContent = locationsData[todayStr];
+                } else {
+                    // 尝试找到最近设置的地点
+                    let latestLocation = "未设置";
+                    for (let date in locationsData) {
+                        latestLocation = locationsData[date];
+                    }
+                    currentLocationEl.textContent = latestLocation;
+                }
+            }
+            
+            // 更新后续日期的地点
+            function updateFutureDates(startDateStr, location) {
+                const startDate = new Date(startDateStr);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // 更新从开始日期到今天的后续日期
+                let currentDate = new Date(startDate);
+                currentDate.setDate(currentDate.getDate() + 1);
+                
+                while (currentDate <= today) {
+                    const dateStr = formatDate(currentDate);
+                    locationsData[dateStr] = location;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            }
+            
+            // 更新统计信息
+            function updateStats() {
+                const statsContainer = document.getElementById('location-stats');
+                statsContainer.innerHTML = '';
+                
+                // 计算各地点的天数
+                const locationCounts = {};
+                let totalDays = 0;
+                
+                for (let date in locationsData) {
+                    const location = locationsData[date];
+                    if (locationCounts[location]) {
+                        locationCounts[location]++;
+                    } else {
+                        locationCounts[location] = 1;
+                    }
+                    totalDays++;
+                }
+                
+                if (totalDays === 0) {
+                    statsContainer.innerHTML = '<div class="no-stats">暂无数据，请先添加地点信息</div>';
+                    return;
+                }
+                
+                // 对地点按天数排序
+                const sortedLocations = Object.keys(locationCounts).sort((a, b) => locationCounts[b] - locationCounts[a]);
+                
+                // 生成统计信息
+                sortedLocations.forEach(location => {
+                    const count = locationCounts[location];
+                    const percentage = ((count / totalDays) * 100).toFixed(1);
+                    
+                    const statItem = document.createElement('div');
+                    statItem.classList.add('stat-item');
+                    
+                    const locationName = document.createElement('div');
+                    locationName.classList.add('location-name');
+                    locationName.innerHTML = `<span>${location}</span><span>${percentage}% (${count}天)</span>`;
+                    
+                    const progressBar = document.createElement('div');
+                    progressBar.classList.add('progress-bar');
+                    
+                    const progress = document.createElement('div');
+                    progress.classList.add('progress');
+                    progress.style.width = `${percentage}%`;
+                    
+                    progressBar.appendChild(progress);
+                    
+                    statItem.appendChild(locationName);
+                    statItem.appendChild(progressBar);
+                    
+                    statsContainer.appendChild(statItem);
+                });
+            }
+            
+            // 初始化事件监听
+            function initEventListeners() {
+                document.getElementById('prev-month').addEventListener('click', () => {
+                    currentDate.setMonth(currentDate.getMonth() - 1);
+                    generateCalendar();
+                });
+                
+                document.getElementById('next-month').addEventListener('click', () => {
+                    // 检查下一月是否是未来月份
+                    const nextMonth = new Date(currentDate);
+                    nextMonth.setMonth(nextMonth.getMonth() + 1);
+                    const today = new Date();
+                    
+                    if (nextMonth.getFullYear() > today.getFullYear() || 
+                        (nextMonth.getFullYear() === today.getFullYear() && 
+                         nextMonth.getMonth() > today.getMonth())) {
+                        // 已经是未来月份，不执行任何操作
+                        return;
+                    }
+                    
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                    generateCalendar();
+                });
+                
+                document.getElementById('close-modal').addEventListener('click', closeModal);
+                document.getElementById('close-batch-modal').addEventListener('click', closeModal);
+                
+                document.getElementById('save-location').addEventListener('click', () => {
+                    const location = document.getElementById('location-input').value.trim();
+                    const updateFuture = document.getElementById('update-future').checked;
+                    
+                    if (location && selectedDate) {
+                        const dateStr = formatDate(selectedDate);
+                        locationsData[dateStr] = location;
+                        
+                        // 如果选择了更新后续日期，则更新后续日期
+                        if (updateFuture) {
+                            updateFutureDates(dateStr, location);
+                        }
+                        
+                        saveData();
+                        generateCalendar();
+                        closeModal();
+                    }
+                });
+                
+                document.getElementById('save-batch-location').addEventListener('click', () => {
+                    const location = document.getElementById('batch-location-input').value.trim();
+                    
+                    if (location && selectedDates.size > 0) {
+                        // 更新所有选中日期的地点
+                        selectedDates.forEach(dateStr => {
+                            locationsData[dateStr] = location;
+                        });
+                        
+                        saveData();
+                        generateCalendar();
+                        closeModal();
+                        
+                        // 清空选择
+                        selectedDates.clear();
+                        updateBatchButtons();
+                        updateSelectedCount();
+                    }
+                });
+                
+                // 批量模式切换
+                document.getElementById('batch-mode').addEventListener('change', function() {
+                    isBatchMode = this.checked;
+                    selectedDates.clear();
+                    updateBatchButtons();
+                    updateSelectedCount();
+                    generateCalendar(); // 重新生成日历以移除选中状态
+                });
+                
+                // 批量更新地点
+                document.getElementById('batch-update').addEventListener('click', openBatchModal);
+                
+                // 批量清除地点
+                document.getElementById('batch-clear').addEventListener('click', function() {
+                    if (selectedDates.size > 0 && confirm(`确定要清除 ${selectedDates.size} 个日期的地点数据吗？`)) {
+                        // 清除所有选中日期的地点
+                        selectedDates.forEach(dateStr => {
+                            delete locationsData[dateStr];
+                        });
+                        
+                        saveData();
+                        generateCalendar();
+                        
+                        // 清空选择
+                        selectedDates.clear();
+                        updateBatchButtons();
+                        updateSelectedCount();
+                    }
+                });
+                
+                // 清除选择
+                document.getElementById('clear-selection').addEventListener('click', function() {
+                    selectedDates.clear();
+                    updateBatchButtons();
+                    updateSelectedCount();
+                    generateCalendar();
+                });
+                
+                // 点击模态框外部关闭
+                window.addEventListener('click', (event) => {
+                    const modal = document.getElementById('location-modal');
+                    const batchModal = document.getElementById('batch-modal');
+                    if (event.target === modal || event.target === batchModal) {
+                        closeModal();
+                    }
+                });
+                
+                // 按Enter键保存
+                document.getElementById('location-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('save-location').click();
+                    }
+                });
+                
+                document.getElementById('batch-location-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('save-batch-location').click();
+                    }
+                });
+            }
+            
+            // 初始化
+            loadData();
+            generateCalendar();
+            updateStats();
+            initEventListeners();
+        });
+    </script>
+</body>
+</html>
