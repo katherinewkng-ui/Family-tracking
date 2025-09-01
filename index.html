@@ -452,7 +452,12 @@
             <button class="save-btn" id="save-batch-location">更新所选日期</button>
         </div>
     </div>
-
+async function loadData() {
+  const res = await fetch('https://gist.githubusercontent.com/你的用户名/你的gistID/raw/data.json');
+  locationsData = await res.json();
+  generateCalendar();
+  updateStats();
+}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // 当前显示的日期
@@ -888,3 +893,4 @@
     </script>
 </body>
 </html>
+
