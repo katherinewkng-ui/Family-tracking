@@ -462,11 +462,13 @@
             let selectedDates = new Set();
             let isBatchMode = false;
             
+// 从 JSONBin 读取数据
 async function loadData() {
   try {
-    const res = await fetch('https://api.jsonbin.io/v3/b/<68b6b7bd43b1c97be9343fd3>/latest', {
-      headers: { 'X-Master-Key': '<$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q>' }
-    });
+    const res = await fetch(
+      'https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3/latest',
+      { headers: { 'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q' } }
+    );
     const json = await res.json();
     locationsData = json.record || {};
   } catch (e) {
@@ -475,15 +477,15 @@ async function loadData() {
   }
   generateCalendar();
   updateStats();
-}
-            
-        async function saveData() {
+}        
+     // 把数据写入 JSONBin
+async function saveData() {
   try {
-    await fetch('https://api.jsonbin.io/v3/b/<68b6b7bd43b1c97be9343fd3>', {
+    await fetch('https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'X-Master-Key': '<$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q>'
+        'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q'
       },
       body: JSON.stringify(locationsData)
     });
@@ -491,8 +493,7 @@ async function loadData() {
     console.error('保存失败', e);
   }
   updateStats();
-}
-            
+}          
             // 生成日历
             function generateCalendar() {
                 const calendarDays = document.getElementById('calendar-days');
@@ -905,6 +906,7 @@ async function loadData() {
     </script>
 </body>
 </html>
+
 
 
 
