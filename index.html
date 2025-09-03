@@ -162,6 +162,11 @@
             flex-grow: 1;
         }
         
+        .empty-location {
+            color: #aaa;
+            font-style: italic;
+        }
+        
         .empty-day {
             background: transparent;
             cursor: default;
@@ -374,7 +379,7 @@
             <p><strong>使用说明：</strong></p>
             <p>1. 点击日期可以设置Dad当天所在的地点</p>
             <p>2. 如果未设置地点，将自动使用前一天的设置</p>
-            <p>3. 只能填写到今天为止的日期，未来日期不可编辑</p>
+            <p>3. 未来日期不可编辑且地点为空</p>
             <p>4. 修改某天地点会自动更新后续日期的地点</p>
             <p>5. 启用批量选择后，可以多选日期进行批量操作</p>
         </div>
@@ -434,7 +439,7 @@
                 <span class="close" id="close-modal">&times;</span>
             </div>
             <div style="margin-bottom: 15px;">
-                <input type="checkbox" id="update-future">
+                <input type="checkbox" id="update-future" checked>
                 <label for="update-future">同时更新后续日期的地点</label>
             </div>
             <input type="text" class="location-input" id="location-input" placeholder="输入地点名称...">
@@ -462,38 +467,40 @@
             let selectedDates = new Set();
             let isBatchMode = false;
             
-// 从 JSONBin 读取数据
-async function loadData() {
-  try {
-    const res = await fetch(
-      'https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3/latest',
-      { headers: { 'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q' } }
-    );
-    const json = await res.json();
-    locationsData = json.record || {};
-  } catch (e) {
-    console.error('读取失败', e);
-    locationsData = {};
-  }
-  generateCalendar();
-  updateStats();
-}        
-     // 把数据写入 JSONBin
-async function saveData() {
-  try {
-    await fetch('https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q'
-      },
-      body: JSON.stringify(locationsData)
-    });
-  } catch (e) {
-    console.error('保存失败', e);
-  }
-  updateStats();
-}          
+            // 从 JSONBin 读取数据
+            async function loadData() {
+                try {
+                    const res = await fetch(
+                        'https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3/latest',
+                        { headers: { 'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q' } }
+                    );
+                    const json = await res.json();
+                    locationsData = json.record || {};
+                } catch (e) {
+                    console.error('读取失败', e);
+                    locationsData = {};
+                }
+                generateCalendar();
+                updateStats();
+            }
+            
+            // 把数据写入 JSONBin
+            async function saveData() {
+                try {
+                    await fetch('https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q'
+                        },
+                        body: JSON.stringify(locationsData)
+                    });
+                } catch (e) {
+                    console.error('保存失败', e);
+                }
+                updateStats();
+            }
+            
             // 生成日历
             function generateCalendar() {
                 const calendarDays = document.getElementById('calendar-days');
@@ -551,12 +558,16 @@ async function saveData() {
                     dayNumber.textContent = day;
                     
                     const dayLocation = document.createElement('div');
-                    dayLocation.classList.add('day-location');
                     
-                    if (locationsData[dateStr]) {
+                    // 修改这里：未来日期显示为空
+                    if (date > today) {
+                        dayLocation.classList.add('day-location', 'empty-location');
+                        dayLocation.textContent = "未填写";
+                    } else if (locationsData[dateStr]) {
+                        dayLocation.classList.add('day-location');
                         dayLocation.textContent = locationsData[dateStr];
                     } else {
-                        // 如果没有设置地点，尝试使用前一天的
+                        // 只对非未来日期尝试使用前一天的设置
                         const prevDate = new Date(date);
                         prevDate.setDate(prevDate.getDate() - 1);
                         
@@ -565,6 +576,7 @@ async function saveData() {
                         while (prevDate >= new Date(2025, 7, 1)) {
                             const prevDateStr = formatDate(prevDate);
                             if (locationsData[prevDateStr]) {
+                                dayLocation.classList.add('day-location');
                                 dayLocation.textContent = locationsData[prevDateStr];
                                 locationsData[dateStr] = locationsData[prevDateStr];
                                 foundLocation = true;
@@ -574,6 +586,7 @@ async function saveData() {
                         }
                         
                         if (!foundLocation) {
+                            dayLocation.classList.add('day-location', 'empty-location');
                             dayLocation.textContent = "未设置地点";
                         }
                     }
@@ -603,6 +616,11 @@ async function saveData() {
             
             // 切换日期选择状态
             function toggleDateSelection(date, dateStr, dayElement) {
+                // 只允许选择非未来日期
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (date > today) return;
+                
                 if (selectedDates.has(dateStr)) {
                     selectedDates.delete(dateStr);
                     dayElement.classList.remove('selected');
@@ -725,13 +743,20 @@ async function saveData() {
                 let totalDays = 0;
                 
                 for (let date in locationsData) {
-                    const location = locationsData[date];
-                    if (locationCounts[location]) {
-                        locationCounts[location]++;
-                    } else {
-                        locationCounts[location] = 1;
+                    // 只统计非未来日期
+                    const dateObj = new Date(date);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (dateObj <= today) {
+                        const location = locationsData[date];
+                        if (locationCounts[location]) {
+                            locationCounts[location]++;
+                        } else {
+                            locationCounts[location] = 1;
+                        }
+                        totalDays++;
                     }
-                    totalDays++;
                 }
                 
                 if (totalDays === 0) {
@@ -822,7 +847,14 @@ async function saveData() {
                     if (location && selectedDates.size > 0) {
                         // 更新所有选中日期的地点
                         selectedDates.forEach(dateStr => {
-                            locationsData[dateStr] = location;
+                            // 只更新非未来日期
+                            const dateObj = new Date(dateStr);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            
+                            if (dateObj <= today) {
+                                locationsData[dateStr] = location;
+                            }
                         });
                         
                         saveData();
@@ -853,7 +885,14 @@ async function saveData() {
                     if (selectedDates.size > 0 && confirm(`确定要清除 ${selectedDates.size} 个日期的地点数据吗？`)) {
                         // 清除所有选中日期的地点
                         selectedDates.forEach(dateStr => {
-                            delete locationsData[dateStr];
+                            // 只清除非未来日期
+                            const dateObj = new Date(dateStr);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            
+                            if (dateObj <= today) {
+                                delete locationsData[dateStr];
+                            }
                         });
                         
                         saveData();
@@ -884,13 +923,13 @@ async function saveData() {
                 });
                 
                 // 按Enter键保存
-                document.getElementById('location-input').addEventListener('keypress', (e) => {
+                document.getElementById('location-input').addEventListener('keypress', (e) {
                     if (e.key === 'Enter') {
                         document.getElementById('save-location').click();
                     }
                 });
                 
-                document.getElementById('batch-location-input').addEventListener('keypress', (e) => {
+                document.getElementById('batch-location-input').addEventListener('keypress', (e) {
                     if (e.key === 'Enter') {
                         document.getElementById('save-batch-location').click();
                     }
