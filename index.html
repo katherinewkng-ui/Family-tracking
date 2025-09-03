@@ -348,22 +348,6 @@
             gap: 5px;
         }
         
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: none;
-        }
-        
-        .data-source {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #666;
-            text-align: center;
-        }
-        
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
@@ -398,10 +382,6 @@
             <p>3. 未来日期不可编辑且地点为空</p>
             <p>4. 修改某天地点会自动更新后续日期的地点</p>
             <p>5. 启用批量选择后，可以多选日期进行批量操作</p>
-        </div>
-        
-        <div id="error-message" class="error-message">
-            无法连接到JSONBin，已使用本地存储。数据将不会同步到云端。
         </div>
         
         <div class="batch-controls">
@@ -450,10 +430,6 @@
                 </div>
             </div>
         </div>
-        
-        <div class="data-source" id="data-source">
-            数据来源: JSONBin.io
-        </div>
     </div>
     
     <div class="modal" id="location-modal">
@@ -490,89 +466,40 @@
             let locationsData = {};
             let selectedDates = new Set();
             let isBatchMode = false;
-            let useLocalStorage = false;
             
-            // 从 JSONBin 读取数据
-            async function loadData() {
-                try {
-                    console.log("正在从JSONBin加载数据...");
-                    const res = await fetch(
-                        'https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3/latest',
-                        { 
-                            headers: { 
-                                'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q',
-                                'Content-Type': 'application/json'
-                            } 
-                        }
-                    );
-                    
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! status: ${res.status}`);
-                    }
-                    
-                    const json = await res.json();
-                    locationsData = json.record || {};
-                    console.log("从JSONBin成功加载数据");
-                    document.getElementById('data-source').textContent = "数据来源: JSONBin.io";
-                } catch (e) {
-                    console.error('从JSONBin读取失败', e);
-                    // 回退到本地存储
-                    useLocalStorage = true;
-                    document.getElementById('error-message').style.display = 'block';
-                    document.getElementById('data-source').textContent = "数据来源: 本地存储";
-                    
-                    const savedData = localStorage.getItem('dadLocations');
-                    if (savedData) {
-                        try {
-                            locationsData = JSON.parse(savedData);
-                            console.log("从本地存储成功加载数据");
-                        } catch (parseError) {
-                            console.error('解析本地存储数据失败', parseError);
-                            locationsData = {};
-                        }
-                    } else {
-                        locationsData = {};
-                    }
-                }
-                generateCalendar();
-                updateStats();
-            }
+           // 从 JSONBin 读取数据
+async function loadData() {
+  try {
+    const res = await fetch(
+      'https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3/latest',
+      { headers: { 'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q' } }
+    );
+    const json = await res.json();
+    locationsData = json.record || {};
+  } catch (e) {
+    console.error('读取失败', e);
+    locationsData = {};
+  }
+  generateCalendar();
+  updateStats();
+}
             
-            // 保存数据
-            async function saveData() {
-                if (useLocalStorage) {
-                    // 使用本地存储
-                    localStorage.setItem('dadLocations', JSON.stringify(locationsData));
-                    console.log("数据已保存到本地存储");
-                } else {
-                    // 尝试保存到JSONBin
-                    try {
-                        const res = await fetch('https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3', {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q'
-                            },
-                            body: JSON.stringify(locationsData)
-                        });
-                        
-                        if (!res.ok) {
-                            throw new Error(`HTTP error! status: ${res.status}`);
-                        }
-                        
-                        console.log("数据已保存到JSONBin");
-                    } catch (e) {
-                        console.error('保存到JSONBin失败', e);
-                        // 回退到本地存储
-                        useLocalStorage = true;
-                        document.getElementById('error-message').style.display = 'block';
-                        document.getElementById('data-source').textContent = "数据来源: 本地存储";
-                        localStorage.setItem('dadLocations', JSON.stringify(locationsData));
-                    }
-                }
-                updateStats();
-            }
-            
+           // 把数据写入 JSONBin
+async function saveData() {
+  try {
+    await fetch('https://api.jsonbin.io/v3/b/68b6b7bd43b1c97be9343fd3', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': '$2a$10$pJt1JPvfQYTk6/VyfA4z5.FKDloZ/exPZain0HjNgreu76ISJUz4q'
+      },
+      body: JSON.stringify(locationsData)
+    });
+  } catch (e) {
+    console.error('保存失败', e);
+  }
+  updateStats();
+}
             // 生成日历
             function generateCalendar() {
                 const calendarDays = document.getElementById('calendar-days');
@@ -631,15 +558,16 @@
                     
                     const dayLocation = document.createElement('div');
                     
-                    // 修改这里：未来日期显示为空
                     if (date > today) {
+                        // 未来日期显示为空
                         dayLocation.classList.add('day-location', 'empty-location');
                         dayLocation.textContent = "未填写";
                     } else if (locationsData[dateStr]) {
+                        // 已设置地点的日期
                         dayLocation.classList.add('day-location');
                         dayLocation.textContent = locationsData[dateStr];
                     } else {
-                        // 只对非未来日期尝试使用前一天的设置
+                        // 如果没有设置地点，尝试使用前一天的
                         const prevDate = new Date(date);
                         prevDate.setDate(prevDate.getDate() - 1);
                         
@@ -686,11 +614,332 @@
                 updateSelectedCount();
             }
             
-            // 其余函数保持不变...
-            // [这里应该包含所有其他函数，但由于字符限制，我保留了主要修改部分]
+            // 切换日期选择状态
+            function toggleDateSelection(date, dateStr, dayElement) {
+                // 只允许选择非未来日期
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (date > today) return;
+                
+                if (selectedDates.has(dateStr)) {
+                    selectedDates.delete(dateStr);
+                    dayElement.classList.remove('selected');
+                } else {
+                    selectedDates.add(dateStr);
+                    dayElement.classList.add('selected');
+                }
+                updateBatchButtons();
+                updateSelectedCount();
+            }
+            
+            // 更新批量操作按钮状态
+            function updateBatchButtons() {
+                const hasSelected = selectedDates.size > 0;
+                document.getElementById('batch-update').disabled = !hasSelected;
+                document.getElementById('batch-clear').disabled = !hasSelected;
+                document.getElementById('clear-selection').disabled = !hasSelected;
+            }
+            
+            // 更新选中日期计数
+            function updateSelectedCount() {
+                document.getElementById('selected-count').textContent = `已选择 ${selectedDates.size} 个日期`;
+            }
+            
+            // 更新导航按钮状态
+            function updateNavigationButtons() {
+                const today = new Date();
+                const nextMonth = new Date(currentDate);
+                nextMonth.setMonth(nextMonth.getMonth() + 1);
+                
+                // 禁用下一月按钮如果下一月是未来月份
+                document.getElementById('next-month').disabled = 
+                    nextMonth.getFullYear() > today.getFullYear() || 
+                    (nextMonth.getFullYear() === today.getFullYear() && 
+                     nextMonth.getMonth() > today.getMonth());
+            }
+            
+            // 格式化日期为YYYY-MM-DD
+            function formatDate(date) {
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // 打开地点模态框
+            function openLocationModal(date) {
+                const modal = document.getElementById('location-modal');
+                const modalTitle = document.getElementById('modal-title');
+                const locationInput = document.getElementById('location-input');
+                
+                const dateStr = formatDate(date);
+                modalTitle.textContent = `设置地点 - ${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+                
+                if (locationsData[dateStr]) {
+                    locationInput.value = locationsData[dateStr];
+                } else {
+                    locationInput.value = '';
+                }
+                
+                modal.style.display = 'flex';
+                locationInput.focus();
+            }
+            
+            // 打开批量更新模态框
+            function openBatchModal() {
+                const modal = document.getElementById('batch-modal');
+                modal.style.display = 'flex';
+                document.getElementById('batch-location-input').focus();
+            }
+            
+            // 关闭模态框
+            function closeModal() {
+                document.getElementById('location-modal').style.display = 'none';
+                document.getElementById('batch-modal').style.display = 'none';
+            }
+            
+            // 更新当前地点显示
+            function updateCurrentLocation() {
+                const currentLocationEl = document.getElementById('current-location');
+                const today = new Date();
+                const todayStr = formatDate(today);
+                
+                if (locationsData[todayStr]) {
+                    currentLocationEl.textContent = locationsData[todayStr];
+                } else {
+                    // 尝试找到最近设置的地点
+                    let latestLocation = "未设置";
+                    for (let date in locationsData) {
+                        latestLocation = locationsData[date];
+                    }
+                    currentLocationEl.textContent = latestLocation;
+                }
+            }
+            
+            // 更新后续日期的地点
+            function updateFutureDates(startDateStr, location) {
+                const startDate = new Date(startDateStr);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // 更新从开始日期到今天的后续日期
+                let currentDate = new Date(startDate);
+                currentDate.setDate(currentDate.getDate() + 1);
+                
+                while (currentDate <= today) {
+                    const dateStr = formatDate(currentDate);
+                    locationsData[dateStr] = location;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            }
+            
+            // 更新统计信息
+            function updateStats() {
+                const statsContainer = document.getElementById('location-stats');
+                statsContainer.innerHTML = '';
+                
+                // 计算各地点的天数
+                const locationCounts = {};
+                let totalDays = 0;
+                
+                for (let date in locationsData) {
+                    // 只统计非未来日期
+                    const dateObj = new Date(date);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (dateObj <= today) {
+                        const location = locationsData[date];
+                        if (locationCounts[location]) {
+                            locationCounts[location]++;
+                        } else {
+                            locationCounts[location] = 1;
+                        }
+                        totalDays++;
+                    }
+                }
+                
+                if (totalDays === 0) {
+                    statsContainer.innerHTML = '<div class="no-stats">暂无数据，请先添加地点信息</div>';
+                    return;
+                }
+                
+                // 对地点按天数排序
+                const sortedLocations = Object.keys(locationCounts).sort((a, b) => locationCounts[b] - locationCounts[a]);
+                
+                // 生成统计信息
+                sortedLocations.forEach(location => {
+                    const count = locationCounts[location];
+                    const percentage = ((count / totalDays) * 100).toFixed(1);
+                    
+                    const statItem = document.createElement('div');
+                    statItem.classList.add('stat-item');
+                    
+                    const locationName = document.createElement('div');
+                    locationName.classList.add('location-name');
+                    locationName.innerHTML = `<span>${location}</span><span>${percentage}% (${count}天)</span>`;
+                    
+                    const progressBar = document.createElement('div');
+                    progressBar.classList.add('progress-bar');
+                    
+                    const progress = document.createElement('div');
+                    progress.classList.add('progress');
+                    progress.style.width = `${percentage}%`;
+                    
+                    progressBar.appendChild(progress);
+                    
+                    statItem.appendChild(locationName);
+                    statItem.appendChild(progressBar);
+                    
+                    statsContainer.appendChild(statItem);
+                });
+            }
+            
+            // 初始化事件监听
+            function initEventListeners() {
+                document.getElementById('prev-month').addEventListener('click', () => {
+                    currentDate.setMonth(currentDate.getMonth() - 1);
+                    generateCalendar();
+                });
+                
+                document.getElementById('next-month').addEventListener('click', () => {
+                    // 检查下一月是否是未来月份
+                    const nextMonth = new Date(currentDate);
+                    nextMonth.setMonth(nextMonth.getMonth() + 1);
+                    const today = new Date();
+                    
+                    if (nextMonth.getFullYear() > today.getFullYear() || 
+                        (nextMonth.getFullYear() === today.getFullYear() && 
+                         nextMonth.getMonth() > today.getMonth())) {
+                        // 已经是未来月份，不执行任何操作
+                        return;
+                    }
+                    
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                    generateCalendar();
+                });
+                
+                document.getElementById('close-modal').addEventListener('click', closeModal);
+                document.getElementById('close-batch-modal').addEventListener('click', closeModal);
+                
+                document.getElementById('save-location').addEventListener('click', () => {
+                    const location = document.getElementById('location-input').value.trim();
+                    const updateFuture = document.getElementById('update-future').checked;
+                    
+                    if (location && selectedDate) {
+                        const dateStr = formatDate(selectedDate);
+                        locationsData[dateStr] = location;
+                        
+                        // 如果选择了更新后续日期，则更新后续日期
+                        if (updateFuture) {
+                            updateFutureDates(dateStr, location);
+                        }
+                        
+                        saveData();
+                        generateCalendar();
+                        closeModal();
+                    }
+                });
+                
+                document.getElementById('save-batch-location').addEventListener('click', () => {
+                    const location = document.getElementById('batch-location-input').value.trim();
+                    
+                    if (location && selectedDates.size > 0) {
+                        // 更新所有选中日期的地点
+                        selectedDates.forEach(dateStr => {
+                            // 只更新非未来日期
+                            const dateObj = new Date(dateStr);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            
+                            if (dateObj <= today) {
+                                locationsData[dateStr] = location;
+                            }
+                        });
+                        
+                        saveData();
+                        generateCalendar();
+                        closeModal();
+                        
+                        // 清空选择
+                        selectedDates.clear();
+                        updateBatchButtons();
+                        updateSelectedCount();
+                    }
+                });
+                
+                // 批量模式切换
+                document.getElementById('batch-mode').addEventListener('change', function() {
+                    isBatchMode = this.checked;
+                    selectedDates.clear();
+                    updateBatchButtons();
+                    updateSelectedCount();
+                    generateCalendar(); // 重新生成日历以移除选中状态
+                });
+                
+                // 批量更新地点
+                document.getElementById('batch-update').addEventListener('click', openBatchModal);
+                
+                // 批量清除地点
+                document.getElementById('batch-clear').addEventListener('click', function() {
+                    if (selectedDates.size > 0 && confirm(`确定要清除 ${selectedDates.size} 个日期的地点数据吗？`)) {
+                        // 清除所有选中日期的地点
+                        selectedDates.forEach(dateStr => {
+                            // 只清除非未来日期
+                            const dateObj = new Date(dateStr);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            
+                            if (dateObj <= today) {
+                                delete locationsData[dateStr];
+                            }
+                        });
+                        
+                        saveData();
+                        generateCalendar();
+                        
+                        // 清空选择
+                        selectedDates.clear();
+                        updateBatchButtons();
+                        updateSelectedCount();
+                    }
+                });
+                
+                // 清除选择
+                document.getElementById('clear-selection').addEventListener('click', function() {
+                    selectedDates.clear();
+                    updateBatchButtons();
+                    updateSelectedCount();
+                    generateCalendar();
+                });
+                
+                // 点击模态框外部关闭
+                window.addEventListener('click', (event) => {
+                    const modal = document.getElementById('location-modal');
+                    const batchModal = document.getElementById('batch-modal');
+                    if (event.target === modal || event.target === batchModal) {
+                        closeModal();
+                    }
+                });
+                
+                // 按Enter键保存
+                document.getElementById('location-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('save-location').click();
+                    }
+                });
+                
+                document.getElementById('batch-location-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('save-batch-location').click();
+                    }
+                });
+            }
             
             // 初始化
             loadData();
+            generateCalendar();
+            updateStats();
             initEventListeners();
         });
     </script>
