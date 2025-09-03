@@ -459,6 +459,46 @@
     </div>
 
     <script>
+        // 获取当前日期
+const today = new Date();
+let currentYear = today.getFullYear();
+let currentMonth = today.getMonth(); // 0-11, 0表示一月
+
+// 生成日历函数 - 这里需要替换您原有的日历生成逻辑
+function generateCalendar(year, month) {
+    // 这里实现基于year和month生成日历的逻辑
+    // 更新月份标题显示
+    document.getElementById('current-month').textContent = `${year}年${month+1}月`;
+    
+    // 您的日历生成代码在这里
+    // 需要修改原有代码，使其基于year和month参数生成日历
+}
+
+// 页面加载时生成当前月份日历
+document.addEventListener('DOMContentLoaded', function() {
+    generateCalendar(currentYear, currentMonth);
+});
+
+// 上个月导航
+function prevMonth() {
+    currentMonth--;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
+    generateCalendar(currentYear, currentMonth);
+}
+
+// 下个月导航
+function nextMonth() {
+    currentMonth++;
+    if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
+    generateCalendar(currentYear, currentMonth);
+}
+
         document.addEventListener('DOMContentLoaded', function() {
             // 当前显示的日期
             let currentDate = new Date(2025, 7, 1); // 2025年8月
@@ -944,6 +984,10 @@ async function saveData() {
         });
     </script>
 </body>
+    | <span onclick="prevMonth()">上个月</span> | 
+<span id="current-month">2025年8月</span> | 
+<span onclick="nextMonth()">下个月</span> |
 </html>
+
 
 
