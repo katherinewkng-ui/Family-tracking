@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭健康追踪</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            color: #4e73df;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #7a8599;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        nav {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .nav-links a {
+            display: block;
+            padding: 20px;
+            text-decoration: none;
+            color: #4e73df;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: #f8f9fe;
+            border-bottom: 3px solid #4e73df;
+            color: #224abe;
+        }
+        
+        .nav-links a i {
+            margin-right: 10px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .card-header i {
+            font-size: 1.8rem;
+            color: #4e73df;
+            margin-right: 15px;
+        }
+        
+        .card-header h2 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+        
+        .card-content {
+            min-height: 200px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fe;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4e73df;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #7a8599;
+            font-size: 0.9rem;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #4e73df;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 20px;
+            text-align: center;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            background: #224abe;
+        }
+        
+        .recent-activity {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+        
+        .activity-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+        
+        .activity-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid #e3e6f0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .activity-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f8f9fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: #4e73df;
+            font-size: 1.2rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7a8599;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <h1>家庭健康追踪</h1>
+            </div>
+            <p class="subtitle">一站式管理家人的健康状况与行踪</p>
+        </header>
+        
+        <nav>
+            <ul class="nav-links">
+                <li><a href="#" class="active"><i class="fas fa-home"></i> 主页</a></li>
+                <li><a href="location-tracker.html"><i class="fas fa-map-marker-alt"></i> 地点追踪</a></li>
+                <li><a href="blood-sugar.html"><i class="fas fa-tint"></i> 血糖监测</a></li>
+                <li><a href="#"><i class="fas fa-user"></i> 家庭成员</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> 设置</a></li>
+            </ul>
+        </nav>
+        
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h2>地点追踪</h2>
+                </div>
+                <div class="card-content">
+                    <p>记录家人每日所在地点，自动计算各地停留时间百分比</p>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value">17</div>
+                            <div class="stat-label">上海停留天数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">9</div>
+                            <div class="stat-label">兰州停留天数</div>
+                        </div>
+                    </div>
+                    <a href="location-tracker.html" class="btn">进入地点追踪</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-tint"></i>
+                    <h2>血糖监测</h2>
+                </div>
+                <div class="card-content">
+                    <p>记录家人血糖测量结果，生成趋势图表和健康报告</p>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value">6.2</div>
+                            <div class="stat-label">平均血糖值</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">28</div>
+                            <div class="stat-label">本月测量次数</div>
+                        </div>
+                    </div>
+                    <a href="blood-sugar.html" class="btn">进入血糖监测</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="recent-activity">
+            <h2><i class="fas fa-history"></i> 最近活动</h2>
+            <ul class="activity-list">
+                <li>
+                    <div class="activity-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <p>Dad 今天在上海</p>
+                        <small>2023年10月25日 08:30</small>
+                    </div>
+                </li>
+                <li>
+                    <div class="activity-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div>
+                        <p>Mom 测量了血糖: 5.8 mmol/L</p>
+                        <small>2023年10月24日 19:45</small>
+                    </div>
+                </li>
+                <li>
+                    <div class="activity-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <p>Dad 昨天在兰州</p>
+                        <small>2023年10月24日 09:15</small>
+                    </div>
+                </li>
+                <li>
+                    <div class="activity-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div>
+                        <p>Dad 测量了血糖: 6.5 mmol/L</p>
+                        <small>2023年10月23日 20:30</small>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <footer>
+            <p>© 2023 家庭健康追踪系统 | 使用 GitHub Pages 部署</p>
+        </footer>
+    </div>
+
+    <script>
+        // 简单的导航激活状态切换
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.nav-links a').forEach(a => {
+                    a.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
