@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>血糖监测 - 家庭健康追踪</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            color: #e91e63;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: #7a8599;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        nav {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links li {
+            flex: 1;
+            text-align: center;
+            min-width: 120px;
+        }
+        
+        .nav-links a {
+            display: block;
+            padding: 15px 10px;
+            text-decoration: none;
+            color: #4e73df;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-links a:hover {
+            background: #f8f9fe;
+            border-bottom: 3px solid #4e73df;
+            color: #224abe;
+        }
+        
+        .nav-links a.active {
+            background: #f8f9fe;
+            border-bottom: 3px solid #e91e63;
+            color: #e91e63;
+        }
+        
+        .nav-links a i {
+            margin-right: 8px;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .card-header i {
+            font-size: 1.8rem;
+            color: #e91e63;
+            margin-right: 15px;
+        }
+        
+        .card-header h2 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .form-group select, 
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #e91e63;
+            box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+        }
+        
+        .meal-section {
+            background: #f8f9fe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .meal-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #e91e63;
+            font-weight: bold;
+        }
+        
+        .meal-title i {
+            margin-right: 10px;
+        }
+        
+        .time-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #e91e63;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .btn:hover {
+            background: #c2185b;
+        }
+        
+        .records {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .record-item {
+            padding: 15px;
+            border-bottom: 1px solid #e3e6f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .record-item:last-child {
+            border-bottom: none;
+        }
+        
+        .record-date {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .record-values {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .record-value {
+            text-align: center;
+        }
+        
+        .record-value .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #e91e63;
+        }
+        
+        .record-value .label {
+            font-size: 0.8rem;
+            color: #7a8599;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-placeholder {
+            height: 300px;
+            background: #f8f9fe;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7a8599;
+            font-style: italic;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7a8599;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+            }
+            
+            .time-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            .record-values {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-tint"></i>
+                <h1>血糖监测</h1>
+            </div>
+            <p class="subtitle">记录和分析家人的血糖数据</p>
+        </header>
+        
+        <nav>
+            <ul class="nav-links">
+                <li><a href="index.html"><i class="fas fa-home"></i> 主页</a></li>
+                <li><a href="location-tracker.html"><i class="fas fa-map-marker-alt"></i> 地点追踪</a></li>
+                <li><a href="blood-sugar.html" class="active"><i class="fas fa-tint"></i> 血糖监测</a></li>
+                <li><a href="#"><i class="fas fa-user"></i> 家庭成员</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> 设置</a></li>
+            </ul>
+        </nav>
+        
+        <div class="content">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-plus-circle"></i>
+                    <h2>添加血糖记录</h2>
+                </div>
+                
+                <div class="form-group">
+                    <label for="family-member">选择家庭成员</label>
+                    <select id="family-member">
+                        <option value="dad">Dad</option>
+                        <option value="mom">Mom</option>
+                        <option value="grandma">Grandma</option>
+                        <option value="grandpa">Grandpa</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="record-date">记录日期</label>
+                    <input type="date" id="record-date" value="">
+                </div>
+                
+                <div class="meal-section">
+                    <div class="meal-title">
+                        <i class="fas fa-sun"></i>
+                        <span>空腹血糖</span>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="血糖值 (mmol/L)">
+                    </div>
+                </div>
+                
+                <div class="meal-section">
+                    <div class="meal-title">
+                        <i class="fas fa-utensils"></i>
+                        <span>早餐</span>
+                    </div>
+                    <div class="time-inputs">
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="meal-section">
+                    <div class="meal-title">
+                        <i class="fas fa-utensils"></i>
+                        <span>午餐</span>
+                    </div>
+                    <div class="time-inputs">
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="meal-section">
+                    <div class="meal-title">
+                        <i class="fas fa-utensils"></i>
+                        <span>晚餐</span>
+                    </div>
+                    <div class="time-inputs">
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">备注</label>
+                    <input type="text" id="notes" placeholder="添加任何备注信息">
+                </div>
+                
+                <button class="btn">保存记录</button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-history"></i>
+                    <h2>最近记录</h2>
+                </div>
+                
+                <div class="records">
+                    <div class="record-item">
+                        <div class="record-date">今天</div>
+                        <div class="record-values">
+                            <div class="record-value">
+                                <div class="value">5.8</div>
+                                <div class="label">空腹</div>
+                            </div>
+                            <div class="record-value">
+                                <div class="value">7.2</div>
+                                <div class="label">早餐后</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-item">
+                        <div class="record-date">10月24日</div>
+                        <div class="record-values">
+                            <div class="record-value">
+                                <div class="value">6.1</div>
+                                <div class="label">空腹</div>
+                            </div>
+                            <div class="record-value">
+                                <div class="value">8.5</div>
+                                <div class="label">午餐后</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-item">
+                        <div class="record-date">10月23日</div>
+                        <div class="record-values">
+                            <div class="record-value">
+                                <div class="value">5.9</div>
+                                <div class="label">空腹</div>
+                            </div>
+                            <div class="record-value">
+                                <div class="value">7.8</div>
+                                <div class="label">晚餐后</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-item">
+                        <div class="record-date">10月22日</div>
+                        <div class="record-values">
+                            <div class="record-value">
+                                <div class="value">6.3</div>
+                                <div class="label">空腹</div>
+                            </div>
+                            <div class="record-value">
+                                <div class="value">9.1</div>
+                                <div class="label">早餐后</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-item">
+                        <div class="record-date">10月21日</div>
+                        <div class="record-values">
+                            <div class="record-value">
+                                <div class="value">6.0</div>
+                                <div class="label">空腹</div>
+                            </div>
+                            <div class="record-value">
+                                <div class="value">7.5</div>
+                                <div class="label">午餐后</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="card-header">
+                <i class="fas fa-chart-line"></i>
+                <h2>血糖趋势图</h2>
+            </div>
+            <div class="chart-placeholder">
+                血糖趋势图表将在这里显示（需要连接图表库）
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 家庭健康追踪系统 | 血糖监测</p>
+        </footer>
+    </div>
+
+    <script>
+        // 设置默认日期为今天
+        document.getElementById('record-date').valueAsDate = new Date();
+        
+        // 简单的表单提交处理
+        document.querySelector('.btn').addEventListener('click', function() {
+            const member = document.getElementById('family-member').value;
+            const date = document.getElementById('record-date').value;
+            
+            alert(`血糖记录已保存！\n家庭成员: ${member}\n日期: ${date}`);
+            // 这里可以添加实际的数据保存逻辑
+        });
+        
+        // 导航激活状态
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            if(link.href === window.location.href) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
