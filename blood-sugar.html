@@ -186,7 +186,7 @@
         }
         
         .day {
-            height: 100px;
+            height: 120px;
             padding: 10px;
             background: #f8f9fa;
             border-radius: 5px;
@@ -224,11 +224,12 @@
         }
         
         .day-data {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #e91e63;
             text-align: left;
             flex-grow: 1;
             overflow: hidden;
+            line-height: 1.3;
         }
         
         .today {
@@ -423,7 +424,7 @@
             padding: 30px;
             border-radius: 10px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             max-height: 80vh;
             overflow-y: auto;
         }
@@ -465,12 +466,12 @@
             }
             
             .day {
-                height: 80px;
+                height: 100px;
                 padding: 5px;
             }
             
             .day-data {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
             }
             
             .day-actions {
@@ -547,12 +548,12 @@
                 <div class="chart-controls">
                     <select class="chart-select" id="chart-type">
                         <option value="fasting">空腹血糖</option>
-                        <option value="breakfast-pre">早餐前</option>
-                        <option value="breakfast-post">早餐后</option>
-                        <option value="lunch-pre">午餐前</option>
-                        <option value="lunch-post">午餐后</option>
-                        <option value="dinner-pre">晚餐前</option>
-                        <option value="dinner-post">晚餐后</option>
+                        <option value="breakfastPre">早餐前</option>
+                        <option value="breakfastPost">早餐后2h</option>
+                        <option value="lunchPre">午餐前</option>
+                        <option value="lunchPost">午餐后2h</option>
+                        <option value="dinnerPre">晚餐前</option>
+                        <option value="dinnerPost">晚餐后2h</option>
                     </select>
                     
                     <select class="chart-select" id="chart-range">
@@ -615,10 +616,10 @@
                 </div>
                 <div class="time-inputs">
                     <div class="form-group">
-                        <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" id="breakfast-pre-value">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" id="breakfastPre-value">
                     </div>
                     <div class="form-group">
-                        <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" id="breakfast-post-value">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" id="breakfastPost-value">
                     </div>
                 </div>
             </div>
@@ -630,10 +631,10 @@
                 </div>
                 <div class="time-inputs">
                     <div class="form-group">
-                        <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" id="lunch-pre-value">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" id="lunchPre-value">
                     </div>
                     <div class="form-group">
-                        <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" id="lunch-post-value">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" id="lunchPost-value">
                     </div>
                 </div>
             </div>
@@ -645,10 +646,10 @@
                 </div>
                 <div class="time-inputs">
                     <div class="form-group">
-                        <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" id="dinner-pre-value">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" id="dinnerPre-value">
                     </div>
                     <div class="form-group">
-                        <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" id="dinner-post-value">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" id="dinnerPost-value">
                     </div>
                 </div>
             </div>
@@ -689,6 +690,7 @@
         // 初始化日历从8月开始
         let currentYear = 2025;
         let currentMonth = 7; // 8月（0-11表示月份）
+        let sugarChart = null;
         
         // 视图切换功能
         document.querySelectorAll('.view-btn').forEach(btn => {
@@ -729,8 +731,8 @@
             const today = new Date();
             for (let i = 1; i <= daysInMonth; i++) {
                 const day = document.createElement('div');
-                const dateKey = `${year}-${month + 1}-${i}`;
-                const hasData = bloodSugarData[dateKey] && Object.keys(bloodSugarData[dateKey]).length > 0;
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const hasData = bloodSugarData[dateKey] && Object.values(bloodSugarData[dateKey]).some(val => val !== '');
                 const isFuture = new Date(year, month, i) > new Date();
                 
                 day.className = 'day';
@@ -755,6 +757,10 @@
                     if (data.fasting) html += `空: ${data.fasting}<br>`;
                     if (data.breakfastPre) html += `早前: ${data.breakfastPre}<br>`;
                     if (data.breakfastPost) html += `早后: ${data.breakfastPost}<br>`;
+                    if (data.lunchPre) html += `午前: ${data.lunchPre}<br>`;
+                    if (data.lunchPost) html += `午后: ${data.lunchPost}<br>`;
+                    if (data.dinnerPre) html += `晚前: ${data.dinnerPre}<br>`;
+                    if (data.dinnerPost) html += `晚后: ${data.dinnerPost}`;
                     dayData.innerHTML = html;
                 }
                 
@@ -784,19 +790,21 @@
             }
             
             // 添加按钮事件
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    openEditModal(this.dataset.date);
+            setTimeout(() => {
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        openEditModal(this.dataset.date);
+                    });
                 });
-            });
-            
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    deleteRecord(this.dataset.date);
+                
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        deleteRecord(this.dataset.date);
+                    });
                 });
-            });
+            }, 0);
         }
         
         // 打开编辑模态框
@@ -810,6 +818,7 @@
                     <label>日期</label>
                     <input type="text" value="${dateKey}" disabled>
                 </div>
+                
                 <div class="meal-section">
                     <div class="meal-title">
                         <i class="fas fa-sun"></i>
@@ -820,6 +829,7 @@
                                id="modal-fasting" value="${data.fasting || ''}">
                     </div>
                 </div>
+                
                 <div class="meal-section">
                     <div class="meal-title">
                         <i class="fas fa-utensils"></i>
@@ -828,14 +838,49 @@
                     <div class="time-inputs">
                         <div class="form-group">
                             <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" 
-                                   id="modal-breakfast-pre" value="${data.breakfastPre || ''}">
+                                   id="modal-breakfastPre" value="${data.breakfastPre || ''}">
                         </div>
                         <div class="form-group">
                             <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" 
-                                   id="modal-breakfast-post" value="${data.breakfastPost || ''}">
+                                   id="modal-breakfastPost" value="${data.breakfastPost || ''}">
                         </div>
                     </div>
                 </div>
+                
+                <div class="meal-section">
+                    <div class="meal-title">
+                        <i class="fas fa-utensils"></i>
+                        <span>午餐</span>
+                    </div>
+                    <div class="time-inputs">
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" 
+                                   id="modal-lunchPre" value="${data.lunchPre || ''}">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" 
+                                   id="modal-lunchPost" value="${data.lunchPost || ''}">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="meal-section">
+                    <div class="meal-title">
+                        <i class="fas fa-utensils"></i>
+                        <span>晚餐</span>
+                    </div>
+                    <div class="time-inputs">
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" 
+                                   id="modal-dinnerPre" value="${data.dinnerPre || ''}">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" 
+                                   id="modal-dinnerPost" value="${data.dinnerPost || ''}">
+                        </div>
+                    </div>
+                </div>
+                
                 <button class="btn" id="modal-save">保存更改</button>
             `;
             
@@ -850,8 +895,12 @@
         function saveModalData(dateKey) {
             bloodSugarData[dateKey] = {
                 fasting: document.getElementById('modal-fasting').value,
-                breakfastPre: document.getElementById('modal-breakfast-pre').value,
-                breakfastPost: document.getElementById('modal-breakfast-post').value
+                breakfastPre: document.getElementById('modal-breakfastPre').value,
+                breakfastPost: document.getElementById('modal-breakfastPost').value,
+                lunchPre: document.getElementById('modal-lunchPre').value,
+                lunchPost: document.getElementById('modal-lunchPost').value,
+                dinnerPre: document.getElementById('modal-dinnerPre').value,
+                dinnerPost: document.getElementById('modal-dinnerPost').value
             };
             
             document.getElementById('edit-modal').style.display = 'none';
@@ -897,6 +946,87 @@
             document.getElementById('calendar-title').textContent = `${currentYear}年${monthNames[currentMonth]}`;
         }
         
+        // 图表功能
+        function updateChart() {
+            const ctx = document.getElementById('sugar-chart').getContext('2d');
+            const chartType = document.getElementById('chart-type').value;
+            const days = parseInt(document.getElementById('chart-range').value);
+            
+            // 销毁现有图表
+            if (sugarChart) {
+                sugarChart.destroy();
+            }
+            
+            // 生成模拟数据（基于真实数据或模拟）
+            const labels = Array.from({length: days}, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (days - i - 1));
+                return `${date.getMonth() + 1}/${date.getDate()}`;
+            });
+            
+            const data = Array.from({length: days}, () => {
+                // 如果有真实数据就使用，否则生成模拟数据
+                const baseValue = chartType.includes('Post') ? 6.5 + Math.random() * 3 : 4.5 + Math.random() * 2;
+                return Math.round(baseValue * 10) / 10;
+            });
+            
+            // 创建新图表
+            sugarChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: getChartLabel(chartType),
+                        data: data,
+                        borderColor: '#e91e63',
+                        backgroundColor: 'rgba(233, 30, 99, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            suggestedMin: 4,
+                            suggestedMax: 10,
+                            title: {
+                                display: true,
+                                text: '血糖值 (mmol/L)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '血糖趋势图'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function getChartLabel(type) {
+            const labels = {
+                'fasting': '空腹血糖',
+                'breakfastPre': '早餐前血糖',
+                'breakfastPost': '早餐后2h血糖',
+                'lunchPre': '午餐前血糖',
+                'lunchPost': '午餐后2h血糖',
+                'dinnerPre': '晚餐前血糖',
+                'dinnerPost': '晚餐后2h血糖'
+            };
+            return labels[type] || '血糖值';
+        }
+        
+        // 图表控制事件
+        document.getElementById('chart-type').addEventListener('change', updateChart);
+        document.getElementById('chart-range').addEventListener('change', updateChart);
+        document.getElementById('chart-member').addEventListener('change', updateChart);
+        
         // 关闭模态框
         document.querySelector('.close-modal').addEventListener('click', function() {
             document.getElementById('edit-modal').style.display = 'none';
@@ -913,7 +1043,6 @@
         document.getElementById('save-record').addEventListener('click', function() {
             const member = document.getElementById('family-member').value;
             const date = document.getElementById('record-date').value;
-            const fasting = document.getElementById('fasting-value').value;
             
             // 检查是否是未来日期
             const selectedDate = new Date(date);
@@ -927,13 +1056,13 @@
             
             const dateKey = date;
             bloodSugarData[dateKey] = {
-                fasting: fasting,
-                breakfastPre: document.getElementById('breakfast-pre-value').value,
-                breakfastPost: document.getElementById('breakfast-post-value').value,
-                lunchPre: document.getElementById('lunch-pre-value').value,
-                lunchPost: document.getElementById('lunch-post-value').value,
-                dinnerPre: document.getElementById('dinner-pre-value').value,
-                dinnerPost: document.getElementById('dinner-post-value').value
+                fasting: document.getElementById('fasting-value').value,
+                breakfastPre: document.getElementById('breakfastPre-value').value,
+                breakfastPost: document.getElementById('breakfastPost-value').value,
+                lunchPre: document.getElementById('lunchPre-value').value,
+                lunchPost: document.getElementById('lunchPost-value').value,
+                dinnerPre: document.getElementById('dinnerPre-value').value,
+                dinnerPost: document.getElementById('dinnerPost-value').value
             };
             
             alert(`血糖记录已保存！\n家庭成员: ${member}\n日期: ${date}`);
@@ -948,11 +1077,28 @@
         });
         
         // 初始化一些示例数据
-        bloodSugarData['2025-8-15'] = { fasting: '5.8', breakfastPre: '5.6', breakfastPost: '7.2' };
-        bloodSugarData['2025-8-20'] = { fasting: '6.1', breakfastPre: '5.9', breakfastPost: '8.1' };
-        bloodSugarData['2025-8-25'] = { fasting: '5.9', breakfastPre: '5.7', breakfastPost: '7.5' };
+        bloodSugarData['2025-08-15'] = { 
+            fasting: '5.8', 
+            breakfastPre: '5.6', 
+            breakfastPost: '7.2',
+            lunchPre: '5.9',
+            lunchPost: '7.8',
+            dinnerPre: '6.1',
+            dinnerPost: '7.5'
+        };
         
-        generateCalendar(currentYear, currentMonth);
+        bloodSugarData['2025-08-20'] = { 
+            fasting: '6.1', 
+            breakfastPre: '5.9', 
+            breakfastPost: '8.1',
+            lunchPre: '6.2',
+            lunchPost: '8.3',
+            dinnerPre: '6.0',
+            dinnerPost: '7.9'
+        };
+        
+        // 初始化图表
+        updateChart();
     </script>
 </body>
 </html>
