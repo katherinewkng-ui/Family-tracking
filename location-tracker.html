@@ -4,15 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Tracking </title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <nav>
-    <ul class="nav-links">
-        <li><a href="index.html"><i class="fas fa-home"></i> 主页</a></li>
-        <li><a href="location-tracker.html" class="active"><i class="fas fa-map-marker-alt"></i> 地点追踪</a></li>
-        <li><a href="blood-sugar.html"><i class="fas fa-tint"></i> 血糖监测</a></li>
-    </ul>
-</nav>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
     <style>
         * {
             box-sizing: border-box;
@@ -52,6 +44,53 @@
         .description {
             font-size: 1.1rem;
             opacity: 0.9;
+        }
+         /* 添加导航菜单样式 */
+        .nav-menu {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            padding: 15px;
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #6a11cb;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            background: #f0f5ff;
+            color: #2575fc;
+        }
+        
+        .nav-links a.active {
+            background: #6a11cb;
+            color: white;
+        }
+        
+        .nav-links i {
+            margin-right: 8px;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
         }
         
         .main-content {
@@ -998,6 +1037,7 @@ async function saveData() {
 <span id="current-month">2025年8月</span> | 
 <span onclick="nextMonth()">下个月</span> |
 </html>
+
 
 
 
