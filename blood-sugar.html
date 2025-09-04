@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>血糖监测 - 家庭健康追踪</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -23,14 +23,14 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         
         header {
             text-align: center;
             padding: 20px 0;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         
         .logo {
@@ -61,7 +61,7 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         
         .nav-links {
@@ -104,52 +104,206 @@
             margin-right: 8px;
         }
         
-        .content {
+        .view-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        
+        .view-btn {
+            padding: 10px 20px;
+            background: #fff;
+            border: 2px solid #e91e63;
+            border-radius: 25px;
+            color: #e91e63;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .view-btn.active {
+            background: #e91e63;
+            color: white;
+        }
+        
+        .calendar-view, .chart-view {
+            display: none;
+        }
+        
+        .calendar-view.active, .chart-view.active {
+            display: block;
+        }
+        
+        .calendar-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .nav-button {
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .nav-button:hover {
+            background: #c2185b;
+        }
+        
+        .weekdays {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
         }
         
-        @media (max-width: 900px) {
-            .content {
-                grid-template-columns: 1fr;
-            }
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
         }
         
-        .card {
+        .day {
+            height: 100px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .day:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .day.has-data {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+        }
+        
+        .day-number {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .day-data {
+            font-size: 0.8rem;
+            color: #e91e63;
+            text-align: left;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        
+        .today {
+            background: #ffe7eb;
+            border: 2px solid #e91e63;
+        }
+        
+        .chart-container {
             background: white;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             padding: 25px;
-            transition: transform 0.3s ease;
+            margin-bottom: 25px;
         }
         
-        .card:hover {
-            transform: translateY(-3px);
-        }
-        
-        .card-header {
+        .chart-header {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e3e6f0;
         }
         
-        .card-header i {
+        .chart-header i {
             font-size: 1.8rem;
             color: #e91e63;
             margin-right: 15px;
         }
         
-        .card-header h2 {
+        .chart-header h2 {
             color: #2c3e50;
             font-size: 1.5rem;
         }
         
-        .form-group {
+        .chart-controls {
+            display: flex;
+            gap: 15px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .chart-select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+        }
+        
+        .chart-canvas-container {
+            height: 400px;
+            position: relative;
+        }
+        
+        .data-form {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+        
+        .form-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .form-header i {
+            font-size: 1.8rem;
+            color: #e91e63;
+            margin-right: 15px;
+        }
+        
+        .form-header h2 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
         }
         
         .form-group label {
@@ -168,17 +322,11 @@
             font-size: 1rem;
         }
         
-        .form-group input:focus {
-            outline: none;
-            border-color: #e91e63;
-            box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
-        }
-        
         .meal-section {
             background: #f8f9fe;
             padding: 15px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .meal-title {
@@ -218,67 +366,6 @@
             background: #c2185b;
         }
         
-        .records {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .record-item {
-            padding: 15px;
-            border-bottom: 1px solid #e3e6f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .record-item:last-child {
-            border-bottom: none;
-        }
-        
-        .record-date {
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        
-        .record-values {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .record-value {
-            text-align: center;
-        }
-        
-        .record-value .value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #e91e63;
-        }
-        
-        .record-value .label {
-            font-size: 0.8rem;
-            color: #7a8599;
-        }
-        
-        .chart-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .chart-placeholder {
-            height: 300px;
-            background: #f8f9fe;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #7a8599;
-            font-style: italic;
-        }
-        
         footer {
             text-align: center;
             margin-top: 40px;
@@ -295,9 +382,13 @@
                 grid-template-columns: 1fr;
             }
             
-            .record-values {
-                flex-direction: column;
-                gap: 5px;
+            .day {
+                height: 80px;
+                padding: 5px;
+            }
+            
+            .day-data {
+                font-size: 0.7rem;
             }
         }
     </style>
@@ -322,13 +413,82 @@
             </ul>
         </nav>
         
-        <div class="content">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-plus-circle"></i>
-                    <h2>添加血糖记录</h2>
+        <div class="view-toggle">
+            <button class="view-btn active" data-view="calendar">日历视图</button>
+            <button class="view-btn" data-view="chart">图表分析</button>
+        </div>
+        
+        <div class="calendar-view active">
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <div class="calendar-title">2023年10月</div>
+                    <div>
+                        <button class="nav-button" id="prev-month">上个月</button>
+                        <button class="nav-button" id="next-month">下个月</button>
+                    </div>
                 </div>
                 
+                <div class="weekdays">
+                    <div>周日</div>
+                    <div>周一</div>
+                    <div>周二</div>
+                    <div>周三</div>
+                    <div>周四</div>
+                    <div>周五</div>
+                    <div>周六</div>
+                </div>
+                
+                <div class="days" id="calendar-days">
+                    <!-- 日历天数由JavaScript生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-view">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h2>血糖趋势分析</h2>
+                </div>
+                
+                <div class="chart-controls">
+                    <select class="chart-select" id="chart-type">
+                        <option value="fasting">空腹血糖</option>
+                        <option value="breakfast-pre">早餐前</option>
+                        <option value="breakfast-post">早餐后</option>
+                        <option value="lunch-pre">午餐前</option>
+                        <option value="lunch-post">午餐后</option>
+                        <option value="dinner-pre">晚餐前</option>
+                        <option value="dinner-post">晚餐后</option>
+                    </select>
+                    
+                    <select class="chart-select" id="chart-range">
+                        <option value="7">最近7天</option>
+                        <option value="14">最近14天</option>
+                        <option value="30" selected>最近30天</option>
+                        <option value="90">最近3个月</option>
+                    </select>
+                    
+                    <select class="chart-select" id="chart-member">
+                        <option value="dad">Dad</option>
+                        <option value="mom">Mom</option>
+                        <option value="all">所有家庭成员</option>
+                    </select>
+                </div>
+                
+                <div class="chart-canvas-container">
+                    <canvas id="sugar-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-form">
+            <div class="form-header">
+                <i class="fas fa-plus-circle"></i>
+                <h2>添加血糖记录</h2>
+            </div>
+            
+            <div class="form-grid">
                 <div class="form-group">
                     <label for="family-member">选择家庭成员</label>
                     <select id="family-member">
@@ -341,160 +501,71 @@
                 
                 <div class="form-group">
                     <label for="record-date">记录日期</label>
-                    <input type="date" id="record-date" value="">
+                    <input type="date" id="record-date">
                 </div>
-                
-                <div class="meal-section">
-                    <div class="meal-title">
-                        <i class="fas fa-sun"></i>
-                        <span>空腹血糖</span>
-                    </div>
-                    <div class="form-group">
-                        <input type="number" step="0.1" min="2" max="20" placeholder="血糖值 (mmol/L)">
-                    </div>
-                </div>
-                
-                <div class="meal-section">
-                    <div class="meal-title">
-                        <i class="fas fa-utensils"></i>
-                        <span>早餐</span>
-                    </div>
-                    <div class="time-inputs">
-                        <div class="form-group">
-                            <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)">
-                        </div>
-                        <div class="form-group">
-                            <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="meal-section">
-                    <div class="meal-title">
-                        <i class="fas fa-utensils"></i>
-                        <span>午餐</span>
-                    </div>
-                    <div class="time-inputs">
-                        <div class="form-group">
-                            <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)">
-                        </div>
-                        <div class="form-group">
-                            <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="meal-section">
-                    <div class="meal-title">
-                        <i class="fas fa-utensils"></i>
-                        <span>晚餐</span>
-                    </div>
-                    <div class="time-inputs">
-                        <div class="form-group">
-                            <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)">
-                        </div>
-                        <div class="form-group">
-                            <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="notes">备注</label>
-                    <input type="text" id="notes" placeholder="添加任何备注信息">
-                </div>
-                
-                <button class="btn">保存记录</button>
             </div>
             
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-history"></i>
-                    <h2>最近记录</h2>
+            <div class="meal-section">
+                <div class="meal-title">
+                    <i class="fas fa-sun"></i>
+                    <span>空腹血糖</span>
                 </div>
-                
-                <div class="records">
-                    <div class="record-item">
-                        <div class="record-date">今天</div>
-                        <div class="record-values">
-                            <div class="record-value">
-                                <div class="value">5.8</div>
-                                <div class="label">空腹</div>
-                            </div>
-                            <div class="record-value">
-                                <div class="value">7.2</div>
-                                <div class="label">早餐后</div>
-                            </div>
-                        </div>
+                <div class="form-group">
+                    <input type="number" step="0.1" min="2" max="20" placeholder="血糖值 (mmol/L)" id="fasting-value">
+                </div>
+            </div>
+            
+            <div class="meal-section">
+                <div class="meal-title">
+                    <i class="fas fa-utensils"></i>
+                    <span>早餐</span>
+                </div>
+                <div class="time-inputs">
+                    <div class="form-group">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" id="breakfast-pre-value">
                     </div>
-                    
-                    <div class="record-item">
-                        <div class="record-date">10月24日</div>
-                        <div class="record-values">
-                            <div class="record-value">
-                                <div class="value">6.1</div>
-                                <div class="label">空腹</div>
-                            </div>
-                            <div class="record-value">
-                                <div class="value">8.5</div>
-                                <div class="label">午餐后</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="record-item">
-                        <div class="record-date">10月23日</div>
-                        <div class="record-values">
-                            <div class="record-value">
-                                <div class="value">5.9</div>
-                                <div class="label">空腹</div>
-                            </div>
-                            <div class="record-value">
-                                <div class="value">7.8</div>
-                                <div class="label">晚餐后</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="record-item">
-                        <div class="record-date">10月22日</div>
-                        <div class="record-values">
-                            <div class="record-value">
-                                <div class="value">6.3</div>
-                                <div class="label">空腹</div>
-                            </div>
-                            <div class="record-value">
-                                <div class="value">9.1</div>
-                                <div class="label">早餐后</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="record-item">
-                        <div class="record-date">10月21日</div>
-                        <div class="record-values">
-                            <div class="record-value">
-                                <div class="value">6.0</div>
-                                <div class="label">空腹</div>
-                            </div>
-                            <div class="record-value">
-                                <div class="value">7.5</div>
-                                <div class="label">午餐后</div>
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" id="breakfast-post-value">
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="chart-container">
-            <div class="card-header">
-                <i class="fas fa-chart-line"></i>
-                <h2>血糖趋势图</h2>
+            
+            <div class="meal-section">
+                <div class="meal-title">
+                    <i class="fas fa-utensils"></i>
+                    <span>午餐</span>
+                </div>
+                <div class="time-inputs">
+                    <div class="form-group">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" id="lunch-pre-value">
+                    </div>
+                    <div class="form-group">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" id="lunch-post-value">
+                    </div>
+                </div>
             </div>
-            <div class="chart-placeholder">
-                血糖趋势图表将在这里显示（需要连接图表库）
+            
+            <div class="meal-section">
+                <div class="meal-title">
+                    <i class="fas fa-utensils"></i>
+                    <span>晚餐</span>
+                </div>
+                <div class="time-inputs">
+                    <div class="form-group">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" id="dinner-pre-value">
+                    </div>
+                    <div class="form-group">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" id="dinner-post-value">
+                    </div>
+                </div>
             </div>
+            
+            <div class="form-group">
+                <label for="notes">备注</label>
+                <input type="text" id="notes" placeholder="添加任何备注信息">
+            </div>
+            
+            <button class="btn" id="save-record">保存记录</button>
         </div>
         
         <footer>
@@ -506,21 +577,212 @@
         // 设置默认日期为今天
         document.getElementById('record-date').valueAsDate = new Date();
         
-        // 简单的表单提交处理
-        document.querySelector('.btn').addEventListener('click', function() {
-            const member = document.getElementById('family-member').value;
-            const date = document.getElementById('record-date').value;
-            
-            alert(`血糖记录已保存！\n家庭成员: ${member}\n日期: ${date}`);
-            // 这里可以添加实际的数据保存逻辑
+        // 视图切换功能
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.calendar-view, .chart-view').forEach(view => {
+                    view.classList.remove('active');
+                });
+                
+                document.querySelector(`.${this.dataset.view}-view`).classList.add('active');
+                
+                if (this.dataset.view === 'chart') {
+                    updateChart();
+                }
+            });
         });
         
-        // 导航激活状态
-        document.querySelectorAll('.nav-links a').forEach(link => {
-            if(link.href === window.location.href) {
-                link.classList.add('active');
+        // 生成日历
+        function generateCalendar(year, month) {
+            const calendarDays = document.getElementById('calendar-days');
+            calendarDays.innerHTML = '';
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDay = firstDay.getDay();
+            
+            // 添加空白日期
+            for (let i = 0; i < startDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'day';
+                calendarDays.appendChild(emptyDay);
+            }
+            
+            // 添加日期
+            const today = new Date();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const day = document.createElement('div');
+                day.className = 'day';
+                
+                if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
+                    day.classList.add('today');
+                }
+                
+                // 模拟一些有数据的日期
+                if (i % 3 === 0 || i % 5 === 0) {
+                    day.classList.add('has-data');
+                }
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = i;
+                day.appendChild(dayNumber);
+                
+                const dayData = document.createElement('div');
+                dayData.className = 'day-data';
+                
+                // 添加模拟数据
+                if (i % 3 === 0) {
+                    dayData.innerHTML = '空: 5.8<br>早后: 7.2';
+                } else if (i % 5 === 0) {
+                    dayData.innerHTML = '空: 6.1<br>午前: 5.9';
+                }
+                
+                day.appendChild(dayData);
+                calendarDays.appendChild(day);
+            }
+        }
+        
+        // 初始化日历
+        const currentDate = new Date();
+        let currentYear = currentDate.getFullYear();
+        let currentMonth = currentDate.getMonth();
+        
+        generateCalendar(currentYear, currentMonth);
+        
+        // 月份导航
+        document.getElementById('prev-month').addEventListener('click', function() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar(currentYear, currentMonth);
+            updateCalendarTitle();
+        });
+        
+        document.getElementById('next-month').addEventListener('click', function() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            generateCalendar(currentYear, currentMonth);
+            updateCalendarTitle();
+        });
+        
+        function updateCalendarTitle() {
+            const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            document.querySelector('.calendar-title').textContent = `${currentYear}年${monthNames[currentMonth]}`;
+        }
+        
+        // 图表功能
+        let sugarChart = null;
+        
+        function updateChart() {
+            const ctx = document.getElementById('sugar-chart').getContext('2d');
+            const chartType = document.getElementById('chart-type').value;
+            const days = parseInt(document.getElementById('chart-range').value);
+            
+            // 销毁现有图表
+            if (sugarChart) {
+                sugarChart.destroy();
+            }
+            
+            // 生成模拟数据
+            const labels = Array.from({length: days}, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (days - i - 1));
+                return `${date.getMonth() + 1}/${date.getDate()}`;
+            });
+            
+            const data = Array.from({length: days}, () => 
+                Math.random() * 3 + (chartType.includes('post') ? 6 : 4.5)
+            );
+            
+            // 创建新图表
+            sugarChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: getChartLabel(chartType),
+                        data: data,
+                        borderColor: '#e91e63',
+                        backgroundColor: 'rgba(233, 30, 99, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            suggestedMin: 4,
+                            suggestedMax: 10,
+                            title: {
+                                display: true,
+                                text: '血糖值 (mmol/L)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '血糖趋势图'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function getChartLabel(type) {
+            const labels = {
+                'fasting': '空腹血糖',
+                'breakfast-pre': '早餐前血糖',
+                'breakfast-post': '早餐后血糖',
+                'lunch-pre': '午餐前血糖',
+                'lunch-post': '午餐后血糖',
+                'dinner-pre': '晚餐前血糖',
+                'dinner-post': '晚餐后血糖'
+            };
+            return labels[type] || '血糖值';
+        }
+        
+        // 图表控制事件
+        document.getElementById('chart-type').addEventListener('change', updateChart);
+        document.getElementById('chart-range').addEventListener('change', updateChart);
+        document.getElementById('chart-member').addEventListener('change', updateChart);
+        
+        // 保存记录
+        document.getElementById('save-record').addEventListener('click', function() {
+            const member = document.getElementById('family-member').value;
+            const date = document.getElementById('record-date').value;
+            const fasting = document.getElementById('fasting-value').value;
+            
+            alert(`血糖记录已保存！\n家庭成员: ${member}\n日期: ${date}\n空腹血糖: ${fasting || '未填写'}`);
+            
+            // 清空表单
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.value = '';
+            });
+            
+            // 刷新日历和图表
+            generateCalendar(currentYear, currentMonth);
+            if (document.querySelector('.chart-view').classList.contains('active')) {
+                updateChart();
             }
         });
+        
+        // 初始化图表
+        updateChart();
     </script>
 </body>
 </html>
