@@ -72,7 +72,53 @@
             font-weight: bold;
             color: #2c3e50;
         }
+  /* 导航样式 */
+        nav {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
         
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links li {
+            flex: 1;
+            text-align: center;
+            min-width: 120px;
+        }
+        
+        .nav-links a {
+            display: block;
+            padding: 15px 10px;
+            text-decoration: none;
+            color: #4e73df;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-links a:hover {
+            background: #f8f9fe;
+            border-bottom: 3px solid #4e73df;
+            color: #224abe;
+        }
+        
+        .nav-links a.active {
+            background: #f8f9fe;
+            border-bottom: 3px solid #4e73df;
+            color: #224abe;
+        }
+        
+        .nav-links a i {
+            margin-right: 8px;
+        }        
         .nav-button {
             background: #6a11cb;
             color: white;
@@ -988,6 +1034,7 @@ async function saveData() {
 <span id="current-month">2025年8月</span> | 
 <span onclick="nextMonth()">下个月</span> |
 </html>
+
 
 
 
