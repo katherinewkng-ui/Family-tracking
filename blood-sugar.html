@@ -190,28 +190,37 @@
             padding: 10px;
             background: #f8f9fa;
             border-radius: 5px;
-            cursor: pointer;
             transition: all 0.3s;
             display: flex;
             flex-direction: column;
             position: relative;
         }
         
-        .day:hover {
-            background: #e9ecef;
+        .day.has-data {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            cursor: pointer;
+        }
+        
+        .day.has-data:hover {
+            background: #d1eaff;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         
-        .day.has-data {
-            background: #e6f7ff;
-            border: 1px solid #91d5ff;
+        .day.future-day {
+            background: #f0f0f0;
+            color: #aaa;
         }
         
         .day-number {
             font-size: 1.1rem;
             font-weight: bold;
             margin-bottom: 5px;
+        }
+        
+        .future-day .day-number {
+            color: #aaa;
         }
         
         .day-data {
@@ -225,6 +234,36 @@
         .today {
             background: #ffe7eb;
             border: 2px solid #e91e63;
+        }
+        
+        .day-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .day-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .edit-btn {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #f44336;
+            color: white;
         }
         
         .chart-container {
@@ -366,6 +405,49 @@
             background: #c2185b;
         }
         
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        
         footer {
             text-align: center;
             margin-top: 40px;
@@ -389,6 +471,17 @@
             
             .day-data {
                 font-size: 0.7rem;
+            }
+            
+            .day-actions {
+                top: 2px;
+                right: 2px;
+            }
+            
+            .day-btn {
+                width: 18px;
+                height: 18px;
+                font-size: 0.6rem;
             }
         }
     </style>
@@ -421,7 +514,7 @@
         <div class="calendar-view active">
             <div class="calendar-container">
                 <div class="calendar-header">
-                    <div class="calendar-title">2023年10月</div>
+                    <div class="calendar-title" id="calendar-title">2025年8月</div>
                     <div>
                         <button class="nav-button" id="prev-month">上个月</button>
                         <button class="nav-button" id="next-month">下个月</button>
@@ -568,6 +661,19 @@
             <button class="btn" id="save-record">保存记录</button>
         </div>
         
+        <!-- 编辑模态框 -->
+        <div class="modal" id="edit-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">编辑血糖记录</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div id="modal-body">
+                    <!-- 动态内容 -->
+                </div>
+            </div>
+        </div>
+        
         <footer>
             <p>© 2023 家庭健康追踪系统 | 血糖监测</p>
         </footer>
@@ -576,6 +682,13 @@
     <script>
         // 设置默认日期为今天
         document.getElementById('record-date').valueAsDate = new Date();
+        
+        // 血糖数据存储
+        let bloodSugarData = {};
+        
+        // 初始化日历从8月开始
+        let currentYear = 2025;
+        let currentMonth = 7; // 8月（0-11表示月份）
         
         // 视图切换功能
         document.querySelectorAll('.view-btn').forEach(btn => {
@@ -616,15 +729,15 @@
             const today = new Date();
             for (let i = 1; i <= daysInMonth; i++) {
                 const day = document.createElement('div');
-                day.className = 'day';
+                const dateKey = `${year}-${month + 1}-${i}`;
+                const hasData = bloodSugarData[dateKey] && Object.keys(bloodSugarData[dateKey]).length > 0;
+                const isFuture = new Date(year, month, i) > new Date();
                 
+                day.className = 'day';
+                if (hasData) day.classList.add('has-data');
+                if (isFuture) day.classList.add('future-day');
                 if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
                     day.classList.add('today');
-                }
-                
-                // 模拟一些有数据的日期
-                if (i % 3 === 0 || i % 5 === 0) {
-                    day.classList.add('has-data');
                 }
                 
                 const dayNumber = document.createElement('div');
@@ -635,23 +748,127 @@
                 const dayData = document.createElement('div');
                 dayData.className = 'day-data';
                 
-                // 添加模拟数据
-                if (i % 3 === 0) {
-                    dayData.innerHTML = '空: 5.8<br>早后: 7.2';
-                } else if (i % 5 === 0) {
-                    dayData.innerHTML = '空: 6.1<br>午前: 5.9';
+                // 显示血糖数据
+                if (hasData && !isFuture) {
+                    const data = bloodSugarData[dateKey];
+                    let html = '';
+                    if (data.fasting) html += `空: ${data.fasting}<br>`;
+                    if (data.breakfastPre) html += `早前: ${data.breakfastPre}<br>`;
+                    if (data.breakfastPost) html += `早后: ${data.breakfastPost}<br>`;
+                    dayData.innerHTML = html;
                 }
                 
                 day.appendChild(dayData);
+                
+                // 添加操作按钮（非未来日期且有数据）
+                if (hasData && !isFuture) {
+                    const actions = document.createElement('div');
+                    actions.className = 'day-actions';
+                    actions.innerHTML = `
+                        <button class="day-btn edit-btn" data-date="${dateKey}">✏️</button>
+                        <button class="day-btn delete-btn" data-date="${dateKey}">🗑️</button>
+                    `;
+                    day.appendChild(actions);
+                }
+                
+                // 添加点击事件（非未来日期）
+                if (!isFuture) {
+                    day.addEventListener('click', function(e) {
+                        if (!e.target.classList.contains('day-btn')) {
+                            openEditModal(dateKey);
+                        }
+                    });
+                }
+                
                 calendarDays.appendChild(day);
+            }
+            
+            // 添加按钮事件
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openEditModal(this.dataset.date);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    deleteRecord(this.dataset.date);
+                });
+            });
+        }
+        
+        // 打开编辑模态框
+        function openEditModal(dateKey) {
+            const modal = document.getElementById('edit-modal');
+            const modalBody = document.getElementById('modal-body');
+            const data = bloodSugarData[dateKey] || {};
+            
+            modalBody.innerHTML = `
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="text" value="${dateKey}" disabled>
+                </div>
+                <div class="meal-section">
+                    <div class="meal-title">
+                        <i class="fas fa-sun"></i>
+                        <span>空腹血糖</span>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" step="0.1" min="2" max="20" placeholder="血糖值 (mmol/L)" 
+                               id="modal-fasting" value="${data.fasting || ''}">
+                    </div>
+                </div>
+                <div class="meal-section">
+                    <div class="meal-title">
+                        <i class="fas fa-utensils"></i>
+                        <span>早餐</span>
+                    </div>
+                    <div class="time-inputs">
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐前血糖 (mmol/L)" 
+                                   id="modal-breakfast-pre" value="${data.breakfastPre || ''}">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" step="0.1" min="2" max="20" placeholder="餐后2h血糖 (mmol/L)" 
+                                   id="modal-breakfast-post" value="${data.breakfastPost || ''}">
+                        </div>
+                    </div>
+                </div>
+                <button class="btn" id="modal-save">保存更改</button>
+            `;
+            
+            document.getElementById('modal-save').addEventListener('click', function() {
+                saveModalData(dateKey);
+            });
+            
+            modal.style.display = 'flex';
+        }
+        
+        // 保存模态框数据
+        function saveModalData(dateKey) {
+            bloodSugarData[dateKey] = {
+                fasting: document.getElementById('modal-fasting').value,
+                breakfastPre: document.getElementById('modal-breakfast-pre').value,
+                breakfastPost: document.getElementById('modal-breakfast-post').value
+            };
+            
+            document.getElementById('edit-modal').style.display = 'none';
+            generateCalendar(currentYear, currentMonth);
+            alert('记录已更新！');
+        }
+        
+        // 删除记录
+        function deleteRecord(dateKey) {
+            if (confirm('确定要删除这条记录吗？')) {
+                delete bloodSugarData[dateKey];
+                generateCalendar(currentYear, currentMonth);
+                alert('记录已删除！');
             }
         }
         
         // 初始化日历
-        const currentDate = new Date();
-        let currentYear = currentDate.getFullYear();
-        let currentMonth = currentDate.getMonth();
-        
         generateCalendar(currentYear, currentMonth);
         
         // 月份导航
@@ -677,89 +894,20 @@
         
         function updateCalendarTitle() {
             const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-            document.querySelector('.calendar-title').textContent = `${currentYear}年${monthNames[currentMonth]}`;
+            document.getElementById('calendar-title').textContent = `${currentYear}年${monthNames[currentMonth]}`;
         }
         
-        // 图表功能
-        let sugarChart = null;
+        // 关闭模态框
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            document.getElementById('edit-modal').style.display = 'none';
+        });
         
-        function updateChart() {
-            const ctx = document.getElementById('sugar-chart').getContext('2d');
-            const chartType = document.getElementById('chart-type').value;
-            const days = parseInt(document.getElementById('chart-range').value);
-            
-            // 销毁现有图表
-            if (sugarChart) {
-                sugarChart.destroy();
+        // 点击模态框外部关闭
+        window.addEventListener('click', function(e) {
+            if (e.target === document.getElementById('edit-modal')) {
+                document.getElementById('edit-modal').style.display = 'none';
             }
-            
-            // 生成模拟数据
-            const labels = Array.from({length: days}, (_, i) => {
-                const date = new Date();
-                date.setDate(date.getDate() - (days - i - 1));
-                return `${date.getMonth() + 1}/${date.getDate()}`;
-            });
-            
-            const data = Array.from({length: days}, () => 
-                Math.random() * 3 + (chartType.includes('post') ? 6 : 4.5)
-            );
-            
-            // 创建新图表
-            sugarChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: getChartLabel(chartType),
-                        data: data,
-                        borderColor: '#e91e63',
-                        backgroundColor: 'rgba(233, 30, 99, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            suggestedMin: 4,
-                            suggestedMax: 10,
-                            title: {
-                                display: true,
-                                text: '血糖值 (mmol/L)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: '血糖趋势图'
-                        }
-                    }
-                }
-            });
-        }
-        
-        function getChartLabel(type) {
-            const labels = {
-                'fasting': '空腹血糖',
-                'breakfast-pre': '早餐前血糖',
-                'breakfast-post': '早餐后血糖',
-                'lunch-pre': '午餐前血糖',
-                'lunch-post': '午餐后血糖',
-                'dinner-pre': '晚餐前血糖',
-                'dinner-post': '晚餐后血糖'
-            };
-            return labels[type] || '血糖值';
-        }
-        
-        // 图表控制事件
-        document.getElementById('chart-type').addEventListener('change', updateChart);
-        document.getElementById('chart-range').addEventListener('change', updateChart);
-        document.getElementById('chart-member').addEventListener('change', updateChart);
+        });
         
         // 保存记录
         document.getElementById('save-record').addEventListener('click', function() {
@@ -767,22 +915,44 @@
             const date = document.getElementById('record-date').value;
             const fasting = document.getElementById('fasting-value').value;
             
-            alert(`血糖记录已保存！\n家庭成员: ${member}\n日期: ${date}\n空腹血糖: ${fasting || '未填写'}`);
+            // 检查是否是未来日期
+            const selectedDate = new Date(date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate > today) {
+                alert('不能为未来日期添加记录！');
+                return;
+            }
+            
+            const dateKey = date;
+            bloodSugarData[dateKey] = {
+                fasting: fasting,
+                breakfastPre: document.getElementById('breakfast-pre-value').value,
+                breakfastPost: document.getElementById('breakfast-post-value').value,
+                lunchPre: document.getElementById('lunch-pre-value').value,
+                lunchPost: document.getElementById('lunch-post-value').value,
+                dinnerPre: document.getElementById('dinner-pre-value').value,
+                dinnerPost: document.getElementById('dinner-post-value').value
+            };
+            
+            alert(`血糖记录已保存！\n家庭成员: ${member}\n日期: ${date}`);
             
             // 清空表单
             document.querySelectorAll('input[type="number"]').forEach(input => {
                 input.value = '';
             });
             
-            // 刷新日历和图表
+            // 刷新日历
             generateCalendar(currentYear, currentMonth);
-            if (document.querySelector('.chart-view').classList.contains('active')) {
-                updateChart();
-            }
         });
         
-        // 初始化图表
-        updateChart();
+        // 初始化一些示例数据
+        bloodSugarData['2025-8-15'] = { fasting: '5.8', breakfastPre: '5.6', breakfastPost: '7.2' };
+        bloodSugarData['2025-8-20'] = { fasting: '6.1', breakfastPre: '5.9', breakfastPost: '8.1' };
+        bloodSugarData['2025-8-25'] = { fasting: '5.9', breakfastPre: '5.7', breakfastPost: '7.5' };
+        
+        generateCalendar(currentYear, currentMonth);
     </script>
 </body>
 </html>
