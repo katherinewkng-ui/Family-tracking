@@ -957,92 +957,91 @@
                 sugarChart.destroy();
             }
             
-            // 生成模拟数据（基于真实数据或模拟）
-            const labels = Array.from({length: days}, (_, i) => {
-                const date = new Date();
-                date.setDate(date.getDate() - (days - i - 1));
-                return `${date.getMonth() + 1}/${date.getDate()}`;
-            });
+             // 获取实际数据
+        const { labels, data } = getChartData(chartType, days);
             
-            const data = Array.from({length: days}, () => {
-                // 如果有真实数据就使用，否则生成模拟数据
-                const baseValue = chartType.includes('Post') ? 6.5 + Math.random() * 3 : 4.5 + Math.random() * 2;
-                return Math.round(baseValue * 10) / 10;
-            });
+           // 如果没有数据，显示提示
+        if (data.filter(val => val !== null).length === 0) {
+            const noDataText = "暂无数据，请先添加血糖记录";
+            ctx.font = "16px Microsoft YaHei";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "#999";
+            ctx.fillText(noDataText, ctx.canvas.width / 2, ctx.canvas.height / 2);
+            return;
+        }
             
             // 创建新图表
-            sugarChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: getChartLabel(chartType),
-                        data: data,
-                        borderColor: '#e91e63',
-                        backgroundColor: 'rgba(233, 30, 99, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            suggestedMin: 4,
-                            suggestedMax: 10,
-                            title: {
-                                display: true,
-                                text: '血糖值 (mmol/L)'
-                            }
-                        }
-                    },
-                    plugins: {
+        sugarChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: getChartLabel(chartType),
+                    data: data,
+                    borderColor: '#e91e63',
+                    backgroundColor: 'rgba(233, 30, 99, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    spanGaps: true // 允许数据间隔
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        suggestedMin: 4,
+                        suggestedMax: 10,
                         title: {
                             display: true,
-                            text: '血糖趋势图'
+                            text: '血糖值 (mmol/L)'
                         }
                     }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '血糖趋势图'
+                    }
                 }
-            });
-        }
-        
-        function getChartLabel(type) {
-            const labels = {
-                'fasting': '空腹血糖',
-                'breakfastPre': '早餐前血糖',
-                'breakfastPost': '早餐后2h血糖',
-                'lunchPre': '午餐前血糖',
-                'lunchPost': '午餐后2h血糖',
-                'dinnerPre': '晚餐前血糖',
-                'dinnerPost': '晚餐后2h血糖'
-            };
-            return labels[type] || '血糖值';
-        }
-        
-        // 图表控制事件
-        document.getElementById('chart-type').addEventListener('change', updateChart);
-        document.getElementById('chart-range').addEventListener('change', updateChart);
-        document.getElementById('chart-member').addEventListener('change', updateChart);
-        
-        // 关闭模态框
-        document.querySelector('.close-modal').addEventListener('click', function() {
-            document.getElementById('edit-modal').style.display = 'none';
-        });
-        
-        // 点击模态框外部关闭
-        window.addEventListener('click', function(e) {
-            if (e.target === document.getElementById('edit-modal')) {
-                document.getElementById('edit-modal').style.display = 'none';
             }
         });
+    }
+        // 获取实际图表数据
+    function getChartData(chartType, days) {
+        const labels = [];
+        const data = [];
+        const today = new Date();
         
-        // 保存记录
-        document.getElementById('save-record').addEventListener('click', function() {
-            const member = document.getElementById('family-member').value;
-            const date = document.getElementById('record-date').value;
+        // 生成最近days天的标签和数据
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateKey = formatDateKey(date);
+            
+            labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+            
+            // 如果有该日期的数据，使用实际数据，否则为null
+            if (bloodSugarData[dateKey] && bloodSugarData[dateKey][chartType]) {
+                data.push(parseFloat(bloodSugarData[dateKey][chartType]));
+            } else {
+                data.push(null); // 没有数据的位置为null
+            }
+        }
+        
+        return { labels, data };
+    }
+
+    // 日期格式化为YYYY-MM-DD
+    function formatDateKey(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
             
             // 检查是否是未来日期
             const selectedDate = new Date(date);
@@ -1076,7 +1075,7 @@
             generateCalendar(currentYear, currentMonth);
         });
         
-        // 初始化一些示例数据
+     /*   // 初始化一些示例数据
         bloodSugarData['2025-08-15'] = { 
             fasting: '5.8', 
             breakfastPre: '5.6', 
@@ -1096,7 +1095,7 @@
             dinnerPre: '6.0',
             dinnerPost: '7.9'
         };
-        
+        */
         // 初始化图表
         updateChart();
     </script>
