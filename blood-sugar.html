@@ -1046,63 +1046,97 @@
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
-            
-            // 检查是否是未来日期
-            const selectedDate = new Date(date);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            if (selectedDate > today) {
-                alert('不能为未来日期添加记录！');
-                return;
-            }
-            
-            const dateKey = date;
-            bloodSugarData[dateKey] = {
-                fasting: document.getElementById('fasting-value').value,
-                breakfastPre: document.getElementById('breakfastPre-value').value,
-                breakfastPost: document.getElementById('breakfastPost-value').value,
-                lunchPre: document.getElementById('lunchPre-value').value,
-                lunchPost: document.getElementById('lunchPost-value').value,
-                dinnerPre: document.getElementById('dinnerPre-value').value,
-                dinnerPost: document.getElementById('dinnerPost-value').value
-            };
-            
-            alert(`血糖记录已保存！\n家庭成员: ${member}\n日期: ${date}`);
-            
-            // 清空表单
-            document.querySelectorAll('input[type="number"]').forEach(input => {
-                input.value = '';
-            });
-            
-            // 刷新日历
-            generateCalendar(currentYear, currentMonth);
-        });
+    
+    // 获取图表标签
+    function getChartLabel(chartType) {
+        const labels = {
+            fasting: '空腹血糖',
+            breakfastPre: '早餐前血糖',
+            breakfastPost: '早餐后2h血糖',
+            lunchPre: '午餐前血糖',
+            lunchPost: '午餐后2h血糖',
+            dinnerPre: '晚餐前血糖',
+            dinnerPost: '晚餐后2h血糖'
+        };
+        return labels[chartType] || '血糖值';
+    }
+    
+    // 保存记录功能
+    document.getElementById('save-record').addEventListener('click', function() {
+        const member = document.getElementById('family-member').value;
+        const date = document.getElementById('record-date').value;
         
-     /*   // 初始化一些示例数据
-        bloodSugarData['2025-08-15'] = { 
-            fasting: '5.8', 
-            breakfastPre: '5.6', 
-            breakfastPost: '7.2',
-            lunchPre: '5.9',
-            lunchPost: '7.8',
-            dinnerPre: '6.1',
-            dinnerPost: '7.5'
+        // 检查是否是未来日期
+        const selectedDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (selectedDate > today) {
+            alert('不能为未来日期添加记录！');
+            return;
+        }
+        
+        // 检查是否至少输入了一个血糖值
+        const hasData = document.getElementById('fasting-value').value ||
+                        document.getElementById('breakfastPre-value').value ||
+                        document.getElementById('breakfastPost-value').value ||
+                        document.getElementById('lunchPre-value').value ||
+                        document.getElementById('lunchPost-value').value ||
+                        document.getElementById('dinnerPre-value').value ||
+                        document.getElementById('dinnerPost-value').value;
+        
+        if (!hasData) {
+            alert('请至少输入一个血糖值！');
+            return;
+        }
+        
+        const dateKey = date;
+        bloodSugarData[dateKey] = {
+            fasting: document.getElementById('fasting-value').value,
+            breakfastPre: document.getElementById('breakfastPre-value').value,
+            breakfastPost: document.getElementById('breakfastPost-value').value,
+            lunchPre: document.getElementById('lunchPre-value').value,
+            lunchPost: document.getElementById('lunchPost-value').value,
+            dinnerPre: document.getElementById('dinnerPre-value').value,
+            dinnerPost: document.getElementById('dinnerPost-value').value
         };
         
-        bloodSugarData['2025-08-20'] = { 
-            fasting: '6.1', 
-            breakfastPre: '5.9', 
-            breakfastPost: '8.1',
-            lunchPre: '6.2',
-            lunchPost: '8.3',
-            dinnerPre: '6.0',
-            dinnerPost: '7.9'
-        };
-        */
-        // 初始化图表
-        updateChart();
+        // 更新日历
+        generateCalendar(currentYear, currentMonth);
+        
+        // 清空表单
+        document.getElementById('fasting-value').value = '';
+        document.getElementById('breakfastPre-value').value = '';
+        document.getElementById('breakfastPost-value').value = '';
+        document.getElementById('lunchPre-value').value = '';
+        document.getElementById('lunchPost-value').value = '';
+        document.getElementById('dinnerPre-value').value = '';
+        document.getElementById('dinnerPost-value').value = '';
+        document.getElementById('notes').value = '';
+        
+        alert('血糖记录已保存！');
+    });
+    
+    // 关闭模态框
+    document.querySelector('.close-modal').addEventListener('click', function() {
+        document.getElementById('edit-modal').style.display = 'none';
+    });
+    
+    // 点击模态框外部关闭
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('edit-modal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
+    // 图表控件变化时更新图表
+    document.getElementById('chart-type').addEventListener('change', updateChart);
+    document.getElementById('chart-range').addEventListener('change', updateChart);
+    document.getElementById('chart-member').addEventListener('change', updateChart);
+    
+    // 初始化图表
+    updateChart();
     </script>
 </body>
 </html>
-    
